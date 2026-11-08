@@ -1,21 +1,21 @@
 # Merge & Serve
 
-A local-first Phaser 3 + TypeScript + Vite browser game prototype.
+A portrait Phaser 3 + TypeScript + Vite browser game prototype.
 
 ## Run
 
-Install Node.js 22.6+ and a package manager, then run `pnpm install` and `pnpm dev` (npm equivalents also work). `pnpm test` checks the economy and merge rules. `pnpm build` type-checks and generates `dist/`.
+Use Node.js 22.6+ and run `pnpm install`, then `pnpm dev`. `pnpm test` checks merge rules, shared-board purchases, orders and economy. `pnpm build` type-checks and generates `dist/`.
 
 ## Play
 
-Buy base ingredients for 2 coins. Drag matching items together to merge, or drag to an empty cell to move. Drag onto SERVE or BIN to act. Tap-to-select controls are also supported. Select the exact requested item and press Serve. Select an unwanted item and press Bin to discard it without refund. Every shift has six customers. Orders expire individually. Day-end upgrades use only coins above tomorrow's reserve. Boards persist between shifts; the prototype saves wallet and upgrade progression at day boundaries in this browser.
+The top bar has a sound toggle and wallet. Drag the exact dish onto the customer order to serve. Buy level-one ingredients using the bottom buttons: Item 2 (left), Item 1 (center), Item 3 (right). Only Item 1 is initially unlocked. Matching type AND level merge on one shared board. Drag unwanted items into the corner bin without refund. Tapping to select and then tapping a target is also supported.
+
+Six customers make a shift. At day-end, spend coins above tomorrow's reserve to expand the board from 4 to 6 to 9 slots, or unlock Item 2 and Item 3. The shared board carries over between shifts. Wallet and upgrades save at day boundaries; sound preference saves immediately. Prior prototype wallet/upgrades remain compatible. Current boards/orders are not yet restored after refresh.
 
 ## Scope
 
-One shop, up to three stations, four merge levels, 4/6/9-slot boards, patience timers, coins, upgrades and shift summary. Art uses temporary emoji and procedural UI. Responsive phone/desktop layouts, merge flashes, floating coins and patience warnings are included. Multiple shops, audio, full mid-shift saves, and final balancing are future work. This is an early playable prototype, not a finished release.
+One fixed 480×860 portrait game, one shared board, three ingredient chains, four levels, drag/tap controls, feedback animations, generated sound effects and mute. Art uses temporary emoji and procedural UI. Multiple shops, final art, full saves and economy tuning are future work.
 
 ## itch.io
 
-Build, then ZIP the **contents** of `dist/` so `index.html` is at the archive root. Upload as HTML, enable “This file will be played in the browser”, use a 960×760 viewport and enable fullscreen. Vite uses relative asset paths for embedded hosting.
-
-
+Build and ZIP the contents of `dist/` with `index.html` at the archive root. Upload as HTML, enable browser play, set viewport to 480×860, enable mobile friendly, portrait orientation and fullscreen. Vite uses relative asset paths for embedded hosting.
