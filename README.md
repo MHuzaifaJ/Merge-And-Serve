@@ -20,7 +20,7 @@ No jar, passive coins, jar upgrades, ingredient charges or bin refunds remain. D
 
 ## Saves
 
-Local autosave preserves current board, partial orders, coins, shop/level, owned cosmetics and equipped choices. Valid v2 level saves migrate to v3 preserving wallet and gameplay, dropping jar data. Fresh installs begin at zero; migrated wallets are preserved. Invalid save data resets safely. Sound preference persists separately. Temporary emoji/procedural art and synthesized effects remain in this prototype.
+Local autosave preserves current board, partial orders, coins, shop/level, owned cosmetics and equipped choices. Valid v2 level saves migrate to v3 preserving wallet and gameplay, dropping jar data. Fresh installs begin at zero; migrated wallets are preserved. Invalid save data resets safely. Sound preference persists separately. Food items use 24 distinct code-drawn SVG sprites shared by board, orders, spawners and drag previews. Items have no names or level badges. Customer and shop names remain; locked buttons show only locks. Progress uses counts, a filler and reward icon. Routine gameplay text is removed; visual merge/error/unlock/payment feedback remains. Decoration menu names and prices remain for purchases. Synthesized sound effects remain in this prototype.
 
 ## itch.io
 
