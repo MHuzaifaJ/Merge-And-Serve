@@ -1,0 +1,9 @@
+// Front-facing, upper-body customer portraits, rendered at the shop counter.
+export function customerKey(index:number){return `customer-${index%6}`;}
+export function customerSvg(index:number){
+ const skin=['#e6b389','#9b644a','#f1c9a3','#c68a65','#704c3d','#dba988'][index%6];
+ const hair=['#493326','#29242b','#8a593b','#282d32','#201f25','#674038'][index%6];
+ const shirt=['#d97366','#74a6b3','#ddae50','#8e82b6','#6e9d80','#cf8fba'][index%6];
+ const styles=[`<path d="M29 41Q23 2 58 6Q94 1 94 43L83 31L75 22L44 30Z" fill="${hair}"/>`,`<path d="M28 47Q18 0 61 5Q102 0 93 49L82 35Q67 32 46 20L36 42Z" fill="${hair}"/>`,`<path d="M26 62Q16 4 57 5Q105 0 98 82L85 91L83 28Q58 40 37 26L38 87L26 91Z" fill="${hair}"/>`];
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="150" viewBox="0 0 128 150"><path d="M9 150V116Q10 94 44 89H84Q117 94 119 116V150Z" fill="${shirt}"/><path d="M49 80H78V98Q65 110 49 98Z" fill="${skin}"/><path d="M49 94L63 108L49 119L38 97M78 94L63 108L80 119L90 97" fill="#ffffff" opacity=".7"/><ellipse cx="31" cy="53" rx="8" ry="11" fill="${skin}"/><ellipse cx="94" cy="53" rx="8" ry="11" fill="${skin}"/><rect x="32" y="19" width="62" height="70" rx="29" fill="${skin}"/>${styles[index%3]}<ellipse cx="49" cy="52" rx="3" ry="4" fill="#302a27"/><ellipse cx="77" cy="52" rx="3" ry="4" fill="#302a27"/><path d="M57 72Q64 78 72 71" fill="none" stroke="#9b4e47" stroke-width="3" stroke-linecap="round"/><path d="M62 56L59 64H65" fill="none" stroke="#7d4b38" opacity=".4" stroke-width="2"/>${index%3===1?'<g fill="none" stroke="#4a4a49" stroke-width="3"><rect x="39" y="43" width="21" height="17" rx="6"/><rect x="67" y="43" width="21" height="17" rx="6"/><path d="M60 49H67"/></g>':''}<path d="M27 127V150M101 127V150" stroke="#253c37" opacity=".15" stroke-width="3"/></svg>`;
+}
