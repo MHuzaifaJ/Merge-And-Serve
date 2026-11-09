@@ -1,85 +1,138 @@
 import Phaser from 'phaser';
-import {Kitchen,DECORATIONS} from './model';
+import {Kitchen,DECORATIONS,type DecorationCategory} from './model';
 import './style.css';
 
-
-// Render above CSS resolution while keeping all gameplay coordinates logical.
+// UI coordinates stay logical; canvas and text backing stores render at device density.
 const DENSITY=Math.min(3,Math.max(2,Math.ceil(window.devicePixelRatio||1)));
-const green=0x438d70,cream=0xf9d3a0,ink='#183e37',muted='#718177',red=0xc45b43;
-const menus=[{name:'Lunch Corner'},{name:'Sweet Street'}];
-type Rect={x:number;y:number;w:number;h:number};const inside=(p:{x:number;y:number},r:Rect)=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h;
+const ink='#183e37',menus=['Lunch Corner','Sweet Street'];
+type Point={x:number;y:number};
+type Rect=Point&{w:number;h:number};
+type Panel='cream'|'wood'|'card'|'bubble'|'track'|'fill';
+const inside=(p:Point,r:Rect)=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h;
+const props:Record<string,number>={'wall-prop-clock':0,'wall-prop-picture':1,'prop-plant':2,'prop-flowers':3};
+const ICON={coin:0,check:1,close:2,mute:3,unlock:4,shop:5,trophy:6,sparkle:7,empty:8};
+
 class Shop extends Phaser.Scene{
- k=new Kitchen();ui!:Phaser.GameObjects.Container;fx!:Phaser.GameObjects.Container;selected=-1;drag=-1;moved=false;origin={x:0,y:0};ghost?:Phaser.GameObjects.Image;cells:Rect[]=[];orders:Rect[]=[];bin={x:392,y:369,w:65,h:65};message='Add free ingredients below. Drag matching items together.';notice='';noticeUntil=0;panel=false;decorTab:'wall'|'counter'|'wallProp'|'counterProp'='wall';soundOn=true;audio?:AudioContext;lastPaint=0;lastSave=0;
- preload(){this.load.spritesheet('foods','art/food-v1.png',{frameWidth:256,frameHeight:256});this.load.spritesheet('people','art/customers-v1.png',{frameWidth:512,frameHeight:512});this.load.image('shop-wall','art/shop-v1.png');this.load.image('board','art/board-v2.png');this.load.spritesheet('controls','art/controls-v2.png',{frameWidth:512,frameHeight:512});this.load.image('wood','art/wood-v2.png');}
- frame(type:number,level:number){return this.k.shop*12+type*4+level-1;}
- get menu(){return menus[this.k.shop];}
+ k=new Kitchen();ui!:Phaser.GameObjects.Container;fx!:Phaser.GameObjects.Container;
+ selected=-1;drag=-1;moved=false;origin={x:0,y:0};ghost?:Phaser.GameObjects.Image;
+ cells:Rect[]=[];orders:Rect[]=[];bin={x:392,y:369,w:65,h:65};
+ message='';notice:''|'item'|'shop'|'finished'='';noticeUntil=0;panel=false;decorTab:DecorationCategory='wall';
+ soundOn=true;audio?:AudioContext;lastSave=0;review=false;
+ preload(){
+  this.load.spritesheet('foods','art/food-v1.png',{frameWidth:256,frameHeight:256});
+  this.load.spritesheet('people','art/customers-v1.png',{frameWidth:512,frameHeight:512});
+  this.load.spritesheet('controls','art/controls-v2.png',{frameWidth:512,frameHeight:512});
+  for(const [key,path] of Object.entries({'shop-wall':'shop-v1','board':'board-v2','wood':'wood-v2','panels':'panels-v3','icons':'icons-v3','props':'props-v3'}))this.load.image(key,`art/${path}.png`);
+ }
+ registerFrames(){
+  this.textures.get('controls').add('green',0,0,620,512,300);
+  this.textures.get('controls').add('gold',0,512,620,512,300);
+  const panels:Record<Panel,number[]>={cream:[16,112,480,336],wood:[528,108,480,340],card:[1040,112,480,336],bubble:[16,600,480,345],track:[526,697,484,135],fill:[1040,696,480,135]};
+  for(const [key,[x,y,w,h]] of Object.entries(panels))this.textures.get('panels').add(key,0,x,y,w,h);
+  for(const [key,n] of [['icons',3],['props',2]] as const){const t=this.textures.get(key),source=t.getSourceImage() as HTMLImageElement;
+   for(let y=0;y<n;y++)for(let x=0;x<n;x++)t.add(y*n+x,0,Math.round(x*source.width/n),Math.round(y*source.height/n),Math.round((x+1)*source.width/n)-Math.round(x*source.width/n),Math.round((y+1)*source.height/n)-Math.round(y*source.height/n));}
+ }
+ create(){
+  this.cameras.main.setZoom(DENSITY).centerOn(240,430);this.registerFrames();
+  try{const saved=localStorage.getItem('merge-serve-v4')??localStorage.getItem('merge-serve-v3')??localStorage.getItem('merge-serve-v2');if(saved)this.k=Kitchen.restore(JSON.parse(saved));this.soundOn=localStorage.getItem('merge-serve-sound')!=='off';}catch{}
+  // Review fixtures are stripped from production and never read or write a player's save.
+  if(import.meta.env.DEV){const state=new URLSearchParams(location.search).get('review');if(state){this.review=true;this.k=new Kitchen();this.k.coins=900;this.k.owned=DECORATIONS.map(d=>d.id);
+  this.k.level=12;this.k.completed=11;this.k.makeOrders();this.k.board=Array.from({length:9},(_,i)=>i<6?{type:i%3,level:1+Math.floor(i/3)}:null);
+  this.k.equipped.wallProp='wall-prop-picture';this.k.equipped.counterProp='prop-plant';
+  if(state.startsWith('decor-')){this.panel=true;this.decorTab=state.slice(6) as DecorationCategory;}
+  if(state==='shop2'){this.k.shop=1;this.k.equipped.wallProp='wall-prop-clock';this.k.equipped.counterProp='prop-flowers';this.k.makeOrders();}
+  if(state==='shopReady'||state==='finished'){this.k.level=20;this.k.completed=20;this.k.shopReady=state==='shopReady';this.k.finished=state==='finished';this.k.shop=state==='finished'?1:0;this.k.makeOrders();for(const c of this.k.customers){c.paid=true;for(const r of c.items)r.done=true;}}
+  if(state==='unlock'){this.notice='item';this.noticeUntil=Number.POSITIVE_INFINITY;}
+  if(state==='muted')this.soundOn=false;if(state==='purchase'||state==='poor'){this.k.owned=DECORATIONS.filter(d=>d.price===0).map(d=>d.id);this.k.equipped.wallProp='wall-prop-none';this.k.equipped.counterProp='prop-none';this.k.coins=state==='poor'?0:200;}
+ 
+  }
+  }
+  this.ui=this.add.container(0,0);this.fx=this.add.container(0,0).setDepth(20);
+  this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.panel||this.k.shopReady||this.k.finished)return;const i=this.cells.findIndex(r=>inside(p,r));if(i<0||!this.k.board[i])return;this.drag=i;this.origin={x:p.x,y:p.y};this.moved=false;});
+  this.input.on('pointermove',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.drag<0)return;const started=!this.moved&&Phaser.Math.Distance.Between(p.x,p.y,this.origin.x,this.origin.y)>10;this.moved ||= started;if(started)this.paint();const item=this.k.board[this.drag];if(this.moved&&item){if(!this.ghost)this.ghost=this.add.image(p.x,p.y,'foods',this.frame(item.type,item.level)).setDisplaySize(100,100).setDepth(50);this.ghost.setPosition(p.x,p.y-20);}});
+  this.input.on('pointerup',(p:Phaser.Input.Pointer)=>this.up(this.logical(p)));this.input.on('pointerupoutside',()=>this.cancel());
+  window.addEventListener('blur',()=>{this.cancel();this.save();});window.addEventListener('pagehide',()=>this.save());document.addEventListener('visibilitychange',()=>{if(document.hidden){this.cancel();this.save();}});
+  this.paint();this.save();document.getElementById('loading')?.remove();
+ }
+
  logical(p:Phaser.Input.Pointer){return this.cameras.main.getWorldPoint(p.x,p.y);}
+ frame(type:number,level:number){return this.k.shop*12+type*4+level-1;}
  art(key:string,x:number,y:number,w:number,h:number,frame?:number|string){const image=this.add.image(x,y,key,frame).setDisplaySize(w,h);this.ui.add(image);return image;}
+ surface(r:Rect,frame:Panel='cream'){
+  // Nine-slicing preserves painted borders on large dialogs and small cards alike.
+  const scale=.25,border=frame==='track'||frame==='fill'?44:84;
+  if(this.game.renderer.type!==Phaser.WEBGL)return this.art('panels',r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);
+  const image=this.add.nineslice(r.x+r.w/2,r.y+r.h/2,'panels',frame,r.w/scale,r.h/scale,border,border,border,border).setScale(scale);this.ui.add(image);return image;
+ }
+ icon(x:number,y:number,key:keyof typeof ICON,size=32){return this.art('icons',x,y,size,size,ICON[key]);}
+ text(x:number,y:number,s:string,size=17,c=ink,width?:number){const t=this.add.text(x,y,s,{fontFamily:'Trebuchet MS, Arial, sans-serif',fontSize:size,fontStyle:'bold',color:c,wordWrap:width?{width,useAdvancedWrap:true}:undefined}).setResolution(DENSITY);this.ui.add(t);return t;}
+ button(r:Rect,label:string,fn:()=>void,active=false,size=17){this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,active?'gold':'green');this.text(r.x+r.w/2,r.y+r.h/2,label,size).setOrigin(.5);this.hit(r,fn);}
+ hit(r:Rect,fn:()=>void){const z=this.add.zone(r.x,r.y,r.w,r.h).setOrigin(0).setInteractive({useHandCursor:true});this.ui.add(z);z.on('pointerup',()=>{if(this.drag<0)fn();});}
  control(r:Rect,frame:number,fn:()=>void){this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);this.hit(r,fn);}
- create(){this.cameras.main.setZoom(DENSITY).centerOn(240,430);this.textures.get('controls').add('green',0,0,620,512,300);this.textures.get('controls').add('gold',0,512,620,512,300);try{const saved=localStorage.getItem('merge-serve-v4')??localStorage.getItem('merge-serve-v3')??localStorage.getItem('merge-serve-v2');if(saved)this.k=Kitchen.restore(JSON.parse(saved));this.soundOn=localStorage.getItem('merge-serve-sound')!=='off';}catch{}this.ui=this.add.container(0,0);this.fx=this.add.container(0,0).setDepth(20);
- this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.panel||this.k.shopReady||this.k.finished)return;const i=this.cells.findIndex(r=>inside(p,r));if(i<0||!this.k.board[i])return;this.drag=i;this.origin={x:p.x,y:p.y};this.moved=false;});
- this.input.on('pointermove',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.drag<0)return;const started=!this.moved&&Phaser.Math.Distance.Between(p.x,p.y,this.origin.x,this.origin.y)>10;this.moved ||= started;if(started)this.paint();const item=this.k.board[this.drag];if(this.moved&&item){if(!this.ghost)this.ghost=this.add.image(p.x,p.y,'foods',this.frame(item.type,item.level)).setDisplaySize(82,82).setDepth(50);this.ghost.setPosition(p.x,p.y-20);}});
- this.input.on('pointerup',(p:Phaser.Input.Pointer)=>this.up(this.logical(p)));this.input.on('pointerupoutside',()=>this.cancel());window.addEventListener('blur',()=>{this.cancel();this.save();});window.addEventListener('pagehide',()=>this.save());document.addEventListener('visibilitychange',()=>{if(document.hidden){this.cancel();this.save();}});this.paint();this.save();}
- save(){try{localStorage.setItem('merge-serve-v4',JSON.stringify(this.k.snapshot()));}catch{}}
+ food(x:number,y:number,type:number,level:number,size:number){return this.art('foods',x,y,size,size,this.frame(type,level));}
+ price(x:number,y:number,amount:number,size=20){this.icon(x-24,y,'coin',size+12);this.text(x-6,y,amount.toLocaleString(),size).setOrigin(0,.5);}
+ save(){if(this.review)return;try{localStorage.setItem('merge-serve-v4',JSON.stringify(this.k.snapshot()));}catch{}}
  cancel(){this.drag=-1;this.moved=false;this.ghost?.destroy();this.ghost=undefined;}
  tone(kind:'buy'|'merge'|'serve'|'error'|'bin'){if(!this.soundOn)return;try{this.audio??=new AudioContext();void this.audio.resume();const ctx=this.audio;({buy:[440],merge:[520,780],serve:[523,659,784],error:[170],bin:[240,150]}[kind]).forEach((f,i)=>{const osc=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+i*.09;osc.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.08,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.13);osc.connect(g);g.connect(ctx.destination);osc.start(t);osc.stop(t+.15);});}catch{}}
- box(r:Rect,c:number,radius=14){const g=this.add.graphics().fillStyle(0x5d412b,.28).fillRoundedRect(r.x,r.y+4,r.w,r.h,radius).fillStyle(c).fillRoundedRect(r.x,r.y,r.w,r.h,radius).lineStyle(2,0x244a3e,.85).strokeRoundedRect(r.x,r.y,r.w,r.h,radius);this.ui.add(g);return g;}
- text(x:number,y:number,s:string,size=17,c=ink,width?:number){const t=this.add.text(x,y,s,{fontFamily:'Trebuchet MS, Arial, sans-serif',fontSize:size,fontStyle:'bold',color:c,wordWrap:width?{width,useAdvancedWrap:true}:undefined}).setResolution(DENSITY);this.ui.add(t);return t;}
- button(r:Rect,label:string,fn:()=>void,c=green,size=17){this.box(r,c);this.text(r.x+r.w/2,r.y+r.h/2,label,size,'#fff').setOrigin(.5);this.hit(r,fn);}
- hit(r:Rect,fn:()=>void){const z=this.add.zone(r.x,r.y,r.w,r.h).setOrigin(0).setInteractive({useHandCursor:true});this.ui.add(z);z.on('pointerup',()=>{if(this.drag<0)fn();});}
  note(s:string,error=false){this.message=s;if(error){this.tone('error');this.cameras.main.shake(90,.002);}this.save();this.paint();}
- food(x:number,y:number,type:number,level:number,size:number){const icon=this.add.image(x,y,'foods',this.frame(type,level)).setDisplaySize(size,size);this.ui.add(icon);return icon;}
- pop(s:string,x:number,y:number){const t=this.add.text(x,y,s,{fontSize:'23px',fontFamily:'Arial',fontStyle:'bold',color:ink,stroke:'#fffcf3',strokeThickness:5}).setOrigin(.5);this.fx.add(t);this.tweens.add({targets:t,y:y-35,alpha:0,duration:850,onComplete:()=>t.destroy()});}
- up(p:{x:number;y:number}){const from=this.drag,moved=this.moved;this.cancel();if(this.panel||this.k.shopReady||this.k.finished)return;if(moved&&from>=0){if(inside(p,this.bin))this.discard(from);else{const c=this.orders.findIndex(r=>inside(p,r));if(c>=0)this.deliver(from,c);else{const to=this.cells.findIndex(r=>inside(p,r));if(to>=0)this.move(from,to);else this.note('Drop on a matching slot, customer order or bin.');}}return;}const i=this.cells.findIndex(r=>inside(p,r));if(i<0)return;if(this.selected>=0&&i!==this.selected)this.move(this.selected,i);else{this.selected=this.selected===i?-1:(this.k.board[i]?i:-1);this.paint();}}
- move(a:number,b:number){const merged=!!this.k.board[b];this.selected=-1;if(!this.k.move(a,b)){this.note('Match the same type and level. Maximum level: 4.',true);return;}this.note(merged?'Nice merge!':'Item moved.');if(merged){this.tone('merge');const r=this.cells[b];const flash=this.add.rectangle(r.x+r.w/2,r.y+r.h/2,r.w-8,r.h-8,0xe8f19c,.5);this.fx.add(flash);this.tweens.add({targets:flash,scale:1.1,alpha:0,duration:300,onComplete:()=>flash.destroy()});}}
- discard(i:number){if(!this.k.bin(i)){this.note('Drag an item to BIN, or select one first.');return;}this.selected=-1;this.tone('bin');this.note('Item discarded. No coins added.');}
- deliver(i:number,c:number){const before=this.k.unlocked;const result=this.k.deliver(i,c);if(!result.accepted){this.note('This customer needs a different item or level. Item returned.',true);return;}this.selected=-1;this.tone('serve');if(result.levelUp){if(this.k.unlocked>before)this.announce('🔓');else if(this.k.shopReady)this.announce('🔓 🏪');else if(this.k.finished)this.announce('✨ 🏆 ✨');this.message=this.k.shopReady?'Ready for a new shop? Your coins and decorations carry over.':this.k.finished?'All 20 levels mastered. Your shop is complete!':`Level ${this.k.level}! New customers are here.`;}else this.message=result.payment?`Order complete! +${result.payment} coins.`:'Item delivered. Payment arrives when the order is complete.';this.save();this.paint();if(result.payment)this.pop(`+${result.payment} 🪙`,365,90);}
- announce(s:string){this.notice=s;this.noticeUntil=this.time.now+2600;}
- buy(type:number){if(type>=this.k.unlocked){this.note(`Unlock Item ${type+1} after level ${type===1?5:10}.`);return;}if(!this.k.addItem(type)){this.note('Board full. Merge or discard an item.',true);return;}this.tone('buy');this.note('');}
+ pop(amount:number,x:number,y:number){const group=this.add.container(x,y);const coin=this.add.image(-30,0,'icons',ICON.coin).setDisplaySize(34,34),t=this.add.text(-9,0,`+${amount}`,{fontSize:'23px',fontFamily:'Trebuchet MS',fontStyle:'bold',color:ink,stroke:'#fffcf3',strokeThickness:4}).setResolution(DENSITY).setOrigin(0,.5);group.add([coin,t]);this.fx.add(group);this.tweens.add({targets:group,y:y-35,alpha:0,duration:850,onComplete:()=>group.destroy()});}
+ up(p:Point){const from=this.drag,moved=this.moved;this.cancel();if(this.panel||this.k.shopReady||this.k.finished)return;if(moved&&from>=0){if(inside(p,this.bin))this.discard(from);else{const c=this.orders.findIndex(r=>inside(p,r));if(c>=0)this.deliver(from,c);else{const to=this.cells.findIndex(r=>inside(p,r));if(to>=0)this.move(from,to);}}return;}const i=this.cells.findIndex(r=>inside(p,r));if(i<0)return;if(this.selected>=0&&i!==this.selected)this.move(this.selected,i);else{this.selected=this.selected===i?-1:(this.k.board[i]?i:-1);this.paint();}}
+ move(a:number,b:number){const merged=!!this.k.board[b];this.selected=-1;if(!this.k.move(a,b)){this.note('',true);return;}this.note('');if(merged){this.tone('merge');const r=this.cells[b],sparkle=this.add.image(r.x+r.w/2,r.y+r.h/2,'icons',ICON.sparkle).setDisplaySize(92,92);this.fx.add(sparkle);this.tweens.add({targets:sparkle,scaleX:sparkle.scaleX*1.35,scaleY:sparkle.scaleY*1.35,alpha:0,duration:380,onComplete:()=>sparkle.destroy()});}}
+ discard(i:number){if(!this.k.bin(i))return;this.selected=-1;this.tone('bin');this.note('');}
+ deliver(i:number,c:number){const before=this.k.unlocked,result=this.k.deliver(i,c);if(!result.accepted){this.note('',true);return;}this.selected=-1;this.tone('serve');if(result.levelUp){if(this.k.unlocked>before)this.announce('item');else if(this.k.shopReady)this.announce('shop');else if(this.k.finished)this.announce('finished');}this.save();this.paint();if(result.payment)this.pop(result.payment,365,90);}
+ announce(kind:'item'|'shop'|'finished'){this.notice=kind;this.noticeUntil=this.time.now+2600;}
+ buy(type:number){if(type>=this.k.unlocked)return;if(!this.k.addItem(type)){this.note('',true);return;}this.tone('buy');this.note('');}
  paint(){this.ui.removeAll(true);const k=this.k;
- this.box({x:0,y:0,w:480,h:860},cream,0);
- this.shopScene();
- this.control({x:8,y:8,w:62,h:62},0,()=>{this.soundOn=!this.soundOn;try{localStorage.setItem('merge-serve-sound',this.soundOn?'on':'off');}catch{}if(this.soundOn)this.tone('buy');this.paint();});
- if(!this.soundOn){const line=this.add.graphics().lineStyle(4,0xffeee0).lineBetween(21,56,57,21);this.ui.add(line);}
- const m=k.milestone;
- this.box({x:82,y:17,w:208,h:43},0xfff2d8,23);this.box({x:88,y:23,w:196,h:31},0xdeb884,17);
- if(k.progress>0)this.box({x:88,y:23,w:Math.max(20,196*k.progress),h:31},0x42c98b,17);
- this.text(169,37,`${Math.max(0,k.completed-m.start)}/${m.end-m.start}`,27,'#123c32').setOrigin(.5).setStroke('#fff8df',3);
- if(k.completed<10)this.food(269,36,k.completed<5?1:2,1,48);else this.text(269,36,k.finished?'🏆':'🏪',28).setOrigin(.5);
- this.text(177,68,`${k.level}`,12,ink).setOrigin(.5);
- this.box({x:304,y:15,w:165,h:48},0xfff2d8,24);this.text(386,39,`🪙 ${k.coins.toLocaleString()}`,25,ink).setOrigin(.5);
- this.art('board',239,580,410,405);this.cells=[];
- for(let i=0;i<9;i++){const r={x:80+i%3*106,y:432+Math.floor(i/3)*102,w:100,h:95};this.cells.push(r);const item=k.board[i];if(this.selected===i)this.box(r,0xd9f2a1,18).setAlpha(.65);if(item)this.food(r.x+50,r.y+47,item.type,item.level,107);}
- this.control(this.bin,1,()=>this.discard(this.selected));
- this.control({x:396,y:727,w:68,h:68},2,()=>{this.cancel();this.panel=true;this.message='';this.paint();});
- [1,0,2].forEach((type,pos)=>{const r={x:17+pos*154,y:774,w:138,h:78},locked=type>=k.unlocked;
- this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,locked?'green':'gold');this.hit(r,()=>this.buy(type));
- if(locked)this.art('controls',r.x+r.w/2,r.y+r.h/2,64,64,5);else this.food(r.x+r.w/2,r.y+r.h/2,type,1,90);});
- if(this.notice&&this.time.now<this.noticeUntil){this.box({x:110,y:690,w:270,h:42},0xe8f19c);this.text(245,711,this.notice,24).setOrigin(.5);}
- if(k.shopReady||k.finished){this.box({x:20,y:150,w:440,h:146},0xe6efb5);this.text(240,169,k.shopReady?'SHOP 2 UNLOCKED':'BOTH SHOPS MASTERED',22).setOrigin(.5,0);this.text(42,203,k.shopReady?'Coins + decorations carry over.\nBoard clears. No return to this shop.':'All orders complete. Your progress is saved.',15,ink,396);if(k.shopReady)this.button({x:60,y:248,w:360,h:38},'OPEN NEXT SHOP →',()=>{k.openShop();this.selected=-1;this.note('Welcome to Sweet Street! A fresh board and new dishes.');});}
- if(this.panel)this.decorationPanel();}
- shopScene(){const k=this.k;
- const wallImage=this.art('shop-wall',240,220,480,280);if(k.decoration('wall').id!=='wall-classic')wallImage.setTint(k.decoration('wall').color);
- this.text(240,127,this.menu.name,25,'#49301d').setFontFamily('Georgia, serif').setOrigin(.5);
- const wall=k.decoration('wallProp');
- if(wall.id==='wall-prop-clock'){this.box({x:433,y:191,w:37,h:44},0x85674c,5);const clock=this.add.graphics();this.ui.add(clock);clock.fillStyle(0xfff9e8).fillCircle(451,212,15).lineStyle(2,0x485a4b).lineBetween(451,212,451,201).lineBetween(451,212,460,216);}
- else if(wall.id==='wall-prop-picture'){this.box({x:431,y:184,w:40,h:63},0x85674c,3);this.box({x:435,y:188,w:32,h:55},0xf8efd7,1);this.text(451,216,'🌿',29).setOrigin(.5);}
- const n=k.customers.length,cw=n===3?128:150,gap=n===3?10:22,total=cw*n+gap*(n-1),start=(430-total)/2;this.orders=[];
- k.customers.forEach((customer,i)=>{const r={x:start+i*(cw+gap),y:153,w:cw,h:87},cx=r.x+cw/2;this.orders.push(r);
- if(!customer.paid)this.art('people',cx,299,n===3?155:174,n===3?155:174,(k.level+i+k.shop)%6);
- this.box(r,customer.paid?0xe0ebce:0xfffcf3,27);
- const tail=this.add.graphics().fillStyle(customer.paid?0xe0ebce:0xfffcf3).fillTriangle(cx-9,237,cx+10,237,cx-2,253).lineStyle(2,0x244a3e).lineBetween(cx-9,240,cx-2,253).lineBetween(cx-2,253,cx+10,240);this.ui.add(tail);
- const iw=Math.min(70,(cw-12)/customer.items.length),total=iw*customer.items.length;
- customer.items.forEach((item,j)=>{const x=r.x+(cw-total)/2+j*iw+iw/2,icon=this.food(x,185,item.type,item.level,Math.min(68,iw));if(item.done){icon.setAlpha(.25);this.text(x,185,'✓',25,'#315d3b').setOrigin(.5);}});
- this.text(cx,223,customer.paid?'✓':`🪙 ${customer.payment}`,18,ink).setOrigin(.5);this.hit(r,()=>{if(!this.panel)this.deliver(this.selected,i);});});
- const counter=this.art('wood',240,602,480,516);if(k.decoration('counter').id!=='counter-classic')counter.setTint(k.decoration('counter').color);
- const prop=k.decoration('counterProp');if('symbol' in prop)this.text(449,350,prop.symbol,42).setOrigin(.5,1);
+  this.surface({x:0,y:0,w:480,h:85});this.shopScene();
+  const sound={x:8,y:8,w:62,h:62};if(this.soundOn)this.control(sound,0,()=>this.toggleSound());else{this.icon(39,39,'mute',62);this.hit(sound,()=>this.toggleSound());}
+  const m=k.milestone;this.art('panels',186,38,208,43,'track');
+  if(k.progress>0){const fill=this.art('panels',88,23,196,31,'fill').setOrigin(0);fill.setCrop(0,0,fill.frame.width*Math.min(1,k.progress),fill.frame.height);}
+  this.text(169,37,`${Math.max(0,k.completed-m.start)}/${m.end-m.start}`,27).setOrigin(.5).setStroke('#fff8df',3);
+  if(k.completed<10)this.food(269,36,k.completed<5?1:2,1,48);else this.icon(269,36,k.finished?'trophy':'shop',43);
+  this.text(177,68,`${k.level}`,12).setOrigin(.5);
+  this.surface({x:304,y:15,w:165,h:48});this.icon(329,39,'coin',40);this.text(395,39,k.coins.toLocaleString(),25).setOrigin(.5);
+  this.art('board',239,580,410,405);this.cells=[];
+  for(let i=0;i<9;i++){const r={x:80+i%3*106,y:432+Math.floor(i/3)*102,w:100,h:95};this.cells.push(r);const item=k.board[i];if(this.selected===i)this.surface(r,'card').setTint(0xe8f5a0).setAlpha(.65);if(item)this.food(r.x+50,r.y+47,item.type,item.level,107);}
+  this.control(this.bin,1,()=>this.discard(this.selected));this.control({x:396,y:727,w:68,h:68},2,()=>{this.cancel();this.panel=true;this.message='';this.paint();});
+  [1,0,2].forEach((type,pos)=>{const r={x:17+pos*154,y:774,w:138,h:78},locked=type>=k.unlocked;this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,locked?'green':'gold');this.hit(r,()=>this.buy(type));if(locked)this.art('controls',r.x+r.w/2,r.y+r.h/2,64,64,5);else this.food(r.x+r.w/2,r.y+r.h/2,type,1,90);});
+  if(this.notice&&this.time.now<this.noticeUntil&&!k.shopReady&&!k.finished){this.surface({x:152,y:687,w:176,h:58},'wood');this.icon(196,716,'unlock',42);if(this.notice==='item')this.food(262,716,Math.max(1,k.unlocked-1),1,52);else this.icon(262,716,this.notice==='shop'?'shop':'trophy',46);}
+  if(k.shopReady||k.finished)this.completionPanel();if(this.panel)this.decorationPanel();
  }
- decorationPanel(){const k=this.k;this.box({x:15,y:105,w:450,h:670},0x173f35);const shield=this.add.zone(0,0,480,860).setOrigin(0).setInteractive();this.ui.add(shield);this.text(34,128,'DECORATIONS',25,'#fff');this.button({x:393,y:120,w:48,h:43},'×',()=>{this.panel=false;this.paint();},0x52775d,26);
- const tabs=[['wall','Wall'],['counter','Counter'],['wallProp','Wall slot'],['counterProp','Counter slot']] as const;
- tabs.forEach(([category,label],i)=>this.button({x:29+i*106,y:180,w:100,h:48},label,()=>{this.decorTab=category;this.message='';this.paint();},this.decorTab===category?0x8b9f69:0x31584a,13));
- DECORATIONS.filter(d=>d.category===this.decorTab).forEach((d,i)=>{const y=255+i*92,owned=k.owned.includes(d.id),equipped=k.equipped[d.category]===d.id;this.box({x:30,y,w:420,h:76},0x31584a,10);if(d.category==='wall'||d.category==='counter')this.box({x:42,y:y+19,w:35,h:35},d.color,5);else this.text(42,y+18,'symbol' in d?d.symbol:'—',30,'#fff');this.text(91,y+15,d.name,16,'#fff',175);this.button({x:285,y:y+20,w:155,h:37},equipped?'✓':owned?'Equip':`🪙 ${d.price}`,()=>{if(equipped)return;const ok=owned?k.equipDecoration(d.id):k.purchaseDecoration(d.id);if(!ok){this.note('Not enough coins. Complete customer orders to earn more.',true);return;}this.tone('merge');this.note(`${d.name} equipped!`);},equipped?0x7c8862:green,14);});
- this.text(34,677,this.message,15,'#eef1c1',405);
+ toggleSound(){this.soundOn=!this.soundOn;if(!this.review)try{localStorage.setItem('merge-serve-sound',this.soundOn?'on':'off');}catch{}if(this.soundOn)this.tone('buy');this.paint();}
+ shopScene(){const k=this.k,wallImage=this.art('shop-wall',240,220,480,280);if(k.decoration('wall').id!=='wall-classic')wallImage.setTint(k.decoration('wall').color);
+  this.text(240,127,menus[k.shop],25,'#49301d').setFontFamily('Georgia, serif').setOrigin(.5);
+  const wallProp=props[k.equipped.wallProp];if(wallProp!==undefined)this.art('props',451,214,58,80,wallProp);
+  const n=k.customers.length,cw=n===3?128:150,gap=n===3?10:22,total=cw*n+gap*(n-1),start=(430-total)/2;this.orders=[];
+  k.customers.forEach((customer,i)=>{const r={x:start+i*(cw+gap),y:153,w:cw,h:100},cx=r.x+cw/2;this.orders.push(r);
+   if(!customer.paid)this.art('people',cx,299,n===3?155:174,n===3?155:174,(k.level+i+k.shop)%6);
+   const bubble=this.art('panels',cx,204,cw+4,107,'bubble');if(customer.paid)bubble.setTint(0xe3efca);
+   const iw=Math.min(70,(cw-12)/customer.items.length),total=iw*customer.items.length;
+   customer.items.forEach((item,j)=>{const x=r.x+(cw-total)/2+j*iw+iw/2,icon=this.food(x,183,item.type,item.level,Math.min(68,iw));if(item.done){icon.setAlpha(.25);this.icon(x,183,'check',30);}});
+   if(customer.paid)this.icon(cx,222,'check',31);else this.price(cx-1,221,customer.payment,18);
+   this.hit(r,()=>{if(!this.panel)this.deliver(this.selected,i);});});
+  const counter=this.art('wood',240,602,480,516);if(k.decoration('counter').id!=='counter-classic')counter.setTint(k.decoration('counter').color);
+  const prop=props[k.equipped.counterProp];if(prop!==undefined)this.art('props',448,316,76,76,prop);
+ }
+ completionPanel(){const k=this.k;this.surface({x:28,y:145,w:424,h:188},'wood');this.icon(85,201,k.shopReady?'shop':'trophy',72);this.text(262,182,k.shopReady?'SHOP 2 UNLOCKED':'BOTH SHOPS MASTERED',20).setOrigin(.5);
+  this.text(141,211,k.shopReady?'Coins and decorations carry over.':'All orders complete. Progress saved.',14,ink,280);
+  if(k.shopReady)this.button({x:110,y:266,w:260,h:45},'OPEN NEXT SHOP',()=>{k.openShop();this.selected=-1;this.note('');},true,17);else this.icon(240,281,'sparkle',54);
+ }
+ decorationPreview(id:string,x:number,y:number,size:number){const d=DECORATIONS.find(d=>d.id===id)!;
+  if(d.category==='wall'||d.category==='counter'){const image=this.art(d.category==='wall'?'shop-wall':'wood',x,y,size,size);if(d.id!=='wall-classic'&&d.id!=='counter-classic')image.setTint(d.color);}
+  else if(props[id]!==undefined)this.art('props',x,y,size,size,props[id]);else this.icon(x,y,'empty',size);
+ }
+ decorationPanel(){const k=this.k;
+  this.surface({x:0,y:0,w:480,h:860},'card').setTint(0x224e42).setAlpha(.72);const shield=this.add.zone(0,0,480,860).setOrigin(0).setInteractive();this.ui.add(shield);
+  this.surface({x:15,y:105,w:450,h:670},'wood');this.text(240,143,'DECORATIONS',26).setFontFamily('Georgia, serif').setOrigin(.5);
+  this.icon(423,140,'close',43);this.hit({x:400,y:117,w:46,h:46},()=>{this.panel=false;this.paint();});
+  const tabs=[['wall','Wall'],['counter','Counter'],['wallProp','Wall slot'],['counterProp','Counter slot']] as const;
+  tabs.forEach(([category,label],i)=>this.button({x:30+i*105,y:184,w:99,h:45},label,()=>{this.decorTab=category;this.message='';this.paint();},this.decorTab===category,13));
+  DECORATIONS.filter(d=>d.category===this.decorTab).forEach((d,i)=>{const y=250+i*110,owned=k.owned.includes(d.id),equipped=k.equipped[d.category]===d.id;
+   this.surface({x:30,y,w:420,h:98},equipped?'card':'cream');this.decorationPreview(d.id,72,y+49,66);this.text(120,y+29,d.name,15,ink,160);
+   const r={x:292,y:y+29,w:143,h:43};this.button(r,owned&&!equipped?'Equip':'',()=>{if(equipped)return;const ok=owned?k.equipDecoration(d.id):k.purchaseDecoration(d.id);if(!ok){this.note('Not enough coins. Complete orders to earn more.',true);return;}this.tone('merge');this.note('');},equipped,14);
+   if(equipped)this.icon(r.x+r.w/2,y+50,'check',34);else if(!owned)this.price(r.x+r.w/2-1,y+50,d.price,17);
+  });
+  if(this.message){this.surface({x:34,y:674,w:412,h:65});this.text(51,687,this.message,14,ink,375);}
  }
  update(t:number){if(t-this.lastSave>=1000){this.save();this.lastSave=t;}if(this.notice&&t>=this.noticeUntil&&this.drag<0){this.notice='';this.paint();}}
 }

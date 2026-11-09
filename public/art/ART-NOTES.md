@@ -18,3 +18,14 @@ Built-in image_gen generated three production assets using the approved mockup a
 - wood-v2.png: edge-to-edge honey wood counter rail at the top with vertical grain below, no objects/UI/text.
 
 Rendering now uses a 2x minimum backing canvas (3x on higher-density devices), a zoomed logical camera and camera-transformed board pointer coordinates. Text textures use the same density. Customer portraits scale with party size, speech bubbles have bounded widths, and food icons are larger. Generated board cells and their hit areas align. Browser verified 960x1720 backing pixels at a 401.85x720 CSS display, spawn/merge/serve/payment and decoration controls.
+
+## Complete UI consistency pass (v3)
+
+Built-in image_gen tool, approved mockup used as reference for all three assets:
+- panels-v3.png: transparent 3x2 atlas of cream rounded panel, honey-wood framed cream panel, sage inset card, outlined cream speech bubble/tail, empty cream/tan progress track and emerald progress fill. No text/icons. Runtime nine-slicing preserves painted borders.
+- icons-v3.png: transparent 3x3 atlas of gold star coin, mint check, coral close, muted sound, open padlock, shop, trophy, sparkle and no-accessory symbol. No text/numerals.
+- props-v3.png: transparent 2x2 atlas of honey wall clock (no numerals), botanical picture, heart-pot leafy plant and tulip vase.
+
+Coverage: top bar/background, order bubbles/tails, progress and coin bars, reward icons, partial/full order ticks, coin payment float, decoration overlay/frame/cards/tabs/buttons/prices/thumbnails, empty accessory, four props, sound muted state, selection tint, merge sparkles, unlock banner, next-shop dialog, final completion and loading view. All are PNG surfaces/icons; numbers, shop name and necessary menu text remain dynamic. Invisible input zones and cameras/tweens are engine behavior, not visible primitives. No runtime graphics/rectangle/circle drawing or emoji glyph icons remain. Old unused SVG generators were retired.
+
+Visual QA reviewed: three customers with three-item orders, all four decoration tabs, owned/equipped/purchasable states, insufficient funds, successful purchase, shop transition, shop 2 items, final completion, unlock notice and muted sound. Dev-only review fixtures never save and are removed from production. Model tests protect payment/merging/progression/save/decor ownership rules.

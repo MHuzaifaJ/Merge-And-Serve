@@ -4,14 +4,14 @@ export const DECORATIONS=[
  {id:'wall-classic',category:'wall',name:'Classic cream',price:0,color:0xf4eddb},
  {id:'wall-rose',category:'wall',name:'Rose walls',price:120,color:0xf2dce1},
  {id:'wall-sky',category:'wall',name:'Sky walls',price:180,color:0xdcebf2},
- {id:'counter-classic',category:'counter',name:'Ivory counter',price:0,color:0xfffcf3},
+ {id:'counter-classic',category:'counter',name:'Honey wood',price:0,color:0xfffcf3},
  {id:'counter-peach',category:'counter',name:'Peach counter',price:180,color:0xffdcc4},
  {id:'wall-prop-none',category:'wallProp',name:'Empty wall slot',price:0,color:0},
- {id:'wall-prop-clock',category:'wallProp',name:'Wall clock',price:110,color:0,symbol:'🕰'},
- {id:'wall-prop-picture',category:'wallProp',name:'Botanical print',price:160,color:0,symbol:'🌿'},
+ {id:'wall-prop-clock',category:'wallProp',name:'Wall clock',price:110,color:0},
+ {id:'wall-prop-picture',category:'wallProp',name:'Botanical print',price:160,color:0},
  {id:'prop-none',category:'counterProp',name:'No accessory',price:0,color:0},
- {id:'prop-plant',category:'counterProp',name:'Little plant',price:90,color:0,symbol:'🪴'},
- {id:'prop-flowers',category:'counterProp',name:'Fresh flowers',price:140,color:0,symbol:'🌷'}
+ {id:'prop-plant',category:'counterProp',name:'Little plant',price:90,color:0},
+ {id:'prop-flowers',category:'counterProp',name:'Fresh flowers',price:140,color:0}
 ] as const;
 export type Item={type:number;level:number};
 export type Request=Item&{done:boolean};
