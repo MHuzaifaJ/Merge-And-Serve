@@ -16,7 +16,7 @@ def box_for(im, region):
     x,y,X,Y=b;rx,ry,rX,rY=region
     return (max(rx,rx+x-AA),max(ry,ry+y-AA),min(rX,rx+X+AA),min(rY,ry+Y+AA))
 
-def food_boxes(im):
+def food_boxes(im,count):
     w,h=im.size;mask=bytearray(im.getchannel('A').point(lambda v:255 if v>=128 else 0).tobytes());objects=[]
     for start in range(w*h):
         if not mask[start]:continue
@@ -26,9 +26,9 @@ def food_boxes(im):
             for n in (p-1 if x else -1,p+1 if x+1<w else -1,p-w if y else -1,p+w if y+1<h else -1):
                 if n>=0 and mask[n]:mask[n]=0;q.append(n)
         if area>300:objects.append((x0,y0,x1+1,y1+1))
-    assert len(objects)==24,len(objects)
+    assert len(objects)==count,len(objects)
     objects.sort(key=lambda b:(b[1]+b[3])/2)
-    for i in range(0,24,4):objects[i:i+4]=sorted(objects[i:i+4])
+    for i in range(0,count,4):objects[i:i+4]=sorted(objects[i:i+4])
     return [(max(0,x-AA),max(0,y-AA),min(w,X+AA),min(h,Y+AA)) for x,y,X,Y in objects]
 
 def regions(im,cols,rows):
@@ -82,9 +82,9 @@ def make_atlas(key,im,entries,aliases=None,insets=None):
 
 def main():
     OUT.mkdir(exist_ok=True,parents=True);layout={'version':1,'atlases':{}}
-    specs=[('foods','food-v1.png',4,6,'food'),('people','customers-v1.png',3,2,'customer'),('controls','controls-v2.png',3,2,'control'),('icons','icons-v3.png',3,3,'icon'),('props','props-v3.png',2,2,'prop'),('panels','panels-v3.png',3,2,'panel')]
+    specs=[('foods','fast-food-v1.png',4,3,'food'),('people','customers-v1.png',3,2,'customer'),('controls','controls-v2.png',3,2,'control'),('icons','icons-v3.png',3,3,'icon'),('props','props-v3.png',2,2,'prop'),('panels','panels-v3.png',3,2,'panel')]
     for key,file,cols,rows,kind in specs:
-        im=Image.open(SRC/file).convert('RGBA');boxes=food_boxes(im) if key=='foods' else [box_for(im,r) for r in regions(im,cols,rows)]
+        im=Image.open(SRC/file).convert('RGBA');boxes=food_boxes(im,cols*rows) if key=='foods' else [box_for(im,r) for r in regions(im,cols,rows)]
         names=['cream','wood','card','bubble','track','fill'] if key=='panels' else list(range(len(boxes)))
         entries=[frame_info(n,b,kind) for n,b in zip(names,boxes)]
         ins={}

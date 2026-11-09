@@ -1,48 +1,31 @@
 # Merge & Serve
 
-A portrait Phaser 3 + TypeScript + Vite merge game: two shops, twenty levels per shop, one nine-slot shared board.
-
-## Run
-
-Node.js 22.6+: `pnpm install`, `pnpm dev`. Run `pnpm test` for economy/progression/save/cosmetics checks and `pnpm build` to type-check and produce dist/.
+A portrait Phaser + TypeScript + Vite game with one endless fast-food shop.
 
 ## Play
 
-Start with zero coins. Base ingredients are FREE. Bottom buttons: Item 2 / Item 1 / Item 3. Only Item 1 starts unlocked. Merge matching type AND level, up to level 4. Move items into empty cells. Drag dishes onto the customer's order; each accepted item ticks off. Only a fully completed order pays, with no bonus. BIN deletes without refund.
+Start with zero coins and nine shared merge slots. All three free generators are available from the start: **Burger / Fries / Drink**, left to right. Merge identical type and stage up to stage four; move items to empty slots or discard them for free. Base items are complete food, not ingredients.
 
-Up to three customers arrive together, up to three items each. No patience timers, departures, days or result screens. New customers arrive automatically when all orders finish. Level 5 unlocks Item 2, level 10 unlocks Item 3, level 20 enables the next-shop button. Shop 2 starts a new board and chains; no return to Shop 1. Wallet, owned and equipped decorations carry over. The prototype ends after Shop 2 level 20.
+| Chain | Stage 1 | Stage 2 | Stage 3 | Stage 4 |
+|---|---|---|---|---|
+| Burger | Basic burger | Cheeseburger | Double burger | Tower burger |
+| Fries | Plain fries | Curly fries | Cheese fries | Loaded fries |
+| Drink | Small soda | Large soda | Ice-cream float | Special shake |
 
-## Decorations
+Each group randomly has 1–3 customers, each randomly requests 1–3 items. Duplicate requests are allowed and each consumes one item. An individual completed order pays once; its check stays until every order in the current group is done. Then a new random group arrives automatically. The board, coins and decorations stay. No visible levels, progress bar, unlocks, days, patience timers, final screen or second shop.
 
-The separate palette button opens a permanent collection. Coins from completed orders buy wall and counter themes, one fixed wall accessory slot and one fixed counter accessory slot. Purchase auto-equips; owned items can be equipped for free forever, in either shop. Cosmetics have no effect on orders, payouts, progression or merging. Coin bar only shows the wallet.
+Orders start with stage-one items. Higher variants gradually join the order pool after 3, 8 and 16 completed groups, weighted toward simpler food. This is internal pacing, never displayed as a level or filler. Players can merge to any stage from the start. The PRNG state is saved so reloading does not reroll orders or the future sequence.
 
-No jar, passive coins, jar upgrades, ingredient charges or bin refunds remain. Default order payouts are 30 times the number of base ingredients represented by required dishes. Rules and decoration prices are in src/model.ts.
+## Decorations and saves
 
-## Saves
+Completed orders earn coins only for permanent cosmetics: wall/counter themes, exactly one wall accessory and one counter accessory. Purchase auto-equips; owned items switch freely. No passive income, ingredient costs, bin refunds or bonuses. Order bubbles show icons/checks only, never payment amounts.
 
-Local autosave v4 preserves current board, partial orders, coins, shop/level, owned cosmetics and equipped choices. v3 cosmetics migrate to fixed wall/counter slots; the removed mint-board purchase refunds 150 coins once. The merge board has one fixed style. Valid v2 level saves migrate to v3 preserving wallet and gameplay, dropping jar data. Fresh installs begin at zero; migrated wallets are preserved. Invalid save data resets safely. Sound preference persists separately. Food items use 24 distinct illustrated PNG sprites shared by board, orders, spawners and drag previews. Items have no names or level badges. Only the shop name remains; front-facing upper-body customers have no visible names; locked buttons show only locks. Progress uses counts, a filler and reward icon. Routine gameplay text is removed; visual merge/error/unlock/payment feedback remains. Decoration menu names and prices remain for purchases. Synthesized sound effects remain in this prototype.
+Save v5 preserves partial/paid orders, board, wallet, random sequence, cosmetic ownership/equipped choices and internal pacing. Old v2–v4 wallets/decor migrate. Old first-shop board types map Fries/Burger/Drink to Burger/Fries/Drink; old dessert boards clear because those items have no equivalent. Old active orders become a new random group. The old v3 retired board-theme refund applies only once.
 
-## itch.io
+## Run and verify
 
-ZIP dist/ contents with index.html at root. HTML/browser-play upload, 480x860 viewport, mobile-friendly, portrait orientation and fullscreen enabled. Relative Vite paths support embedding.
+Node.js 22.6+: `pnpm install`, `pnpm dev`, `pnpm test`, `pnpm build`. An official Rollup WASM override supports Windows environments that block native add-ons. Build produces dist/; zip its contents with index.html at the root for itch HTML/browser play. Viewport: 480×860, mobile-friendly portrait with fullscreen enabled.
 
-## Shop scene
+Original PNG sources are in art-source/. The asset pipeline finds real silhouette bounds, preserves antialias pixels, aligns pivots, adds 4px edge extrusion plus 4px transparent gutters, and exports PNG/JSON atlases. Install scripts/requirements-art.txt with Python; run `python scripts/slice_assets.py`, then `python scripts/verify_slices.py` (`pnpm test:assets`). All dynamic text uses bundled Lilita One (SIL OFL license in public/fonts/OFL.txt). Canvas/text render at 2×–3× density. All visible surfaces/icons use painted PNGs; no emoji UI or visible geometry primitives remain.
 
-Above the merge board: patterned wall, shop sign, front-facing upper-body customers, icon order bubbles, and a continuous foreground counter. Serve by dropping the matching item onto the customer bubble. Completed customers leave their counter position. Wall and counter themes are independent; each surface has exactly one accessory slot, outside customer/order bounds. Decoration tabs: Wall / Counter / Wall slot / Counter slot. No shelf slots or merge-board theme options.
-
-Build uses the official Rollup WASM package through a pnpm override for Windows environments that block native add-ons.
-
-
-## Unified illustrated UI
-
-All visible surfaces and icons use the approved PNG art direction: speech bubbles, progress/coin bars, decoration dialog/cards/tabs/buttons and previews, muted sound, check/close/coin/reward symbols, wall/counter props, selection/merge feedback, milestone notices, transition/completion panels and loading view. Text and numbers stay dynamic; invisible Phaser zones provide input. No runtime Graphics/Rectangle primitives or emoji icons remain. Text/backing canvas render at 2x–3x density.
-
-Development-only visual review: append `?review=three`, `decor-wall`, `decor-counter`, `decor-wallProp`, `decor-counterProp`, `shop2`, `shopReady`, `finished`, `unlock` or `muted`. Review fixtures do not save, and Vite strips their setup from production builds.
-
-Order bubbles display icons/checks only, without payment numbers. Payout rules remain unchanged. Progress pills and green/gold controls preserve painted caps/borders with nine-slicing; material previews use framed detail swatches. All UI text uses the locally bundled Lilita One font (SIL OFL license included in public/fonts/OFL.txt).
-
-## Production slicing
-
-Original atlas artwork is preserved in art-source/. Players load generated PNG/JSON atlases from public/art/sliced-*. The pipeline finds actual food silhouettes (the source rows are not uniform), trims alpha bounds with 3px antialias allowance, aligns portrait baselines, records pivots and virtual sizes, and adds 4px edge extrusion plus 4px transparent gutters. UI cap insets are per-frame and clamped at small render sizes. Props fit their boxes without aspect distortion; in-world counter props use a bottom pivot while menu previews use a center pivot.
-
-To regenerate: install scripts/requirements-art.txt with Python, run `python scripts/slice_assets.py`, then `python scripts/verify_slices.py` (or pnpm test:assets). The verifier checks 57 unique frames plus 2 shared button aliases, exact copied pixels, coverage of source alpha >=32, trim/virtual bounds, pivots, transparent gutters, extruded texels and nine-slice geometry. Independent board/shop/counter textures are also checked. Dev atlas galleries: `?review=atlas-foods-1`, `atlas-foods-2`, `atlas-icons`, `atlas-controls`, `atlas-people`, `atlas-props`; fixtures are removed from production and never save.
+Dev-only review pages: `?review=three`, `single`, `paid`, `purchase`, `poor`, `muted`, `decor-wall`, `decor-counter`, `decor-wallProp`, `decor-counterProp`, `atlas-foods`, `atlas-icons`, `atlas-controls`, `atlas-people`, `atlas-props`. Fixtures never save and are stripped from production.
