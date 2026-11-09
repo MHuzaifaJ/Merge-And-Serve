@@ -1,28 +1,29 @@
 import Phaser from 'phaser';
 import {Kitchen,DECORATIONS} from './model';
 import './style.css';
-import {itemKey,itemSvg} from './items';
-import {customerKey,customerSvg} from './shop-art';
-const green=0x245e4e,cream=0xf4eddb,ink='#183e37',muted='#718177',red=0xc45b43;
+
+
+const green=0x438d70,cream=0xf9d3a0,ink='#183e37',muted='#718177',red=0xc45b43;
 const menus=[{name:'Lunch Corner'},{name:'Sweet Street'}];
 type Rect={x:number;y:number;w:number;h:number};const inside=(p:Phaser.Input.Pointer,r:Rect)=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h;
 class Shop extends Phaser.Scene{
- k=new Kitchen();ui!:Phaser.GameObjects.Container;fx!:Phaser.GameObjects.Container;selected=-1;drag=-1;moved=false;origin={x:0,y:0};ghost?:Phaser.GameObjects.Image;cells:Rect[]=[];orders:Rect[]=[];bin={x:376,y:377,w:84,h:43};message='Add free ingredients below. Drag matching items together.';notice='';noticeUntil=0;panel=false;decorTab:'wall'|'counter'|'wallProp'|'counterProp'='wall';soundOn=true;audio?:AudioContext;lastPaint=0;lastSave=0;
- preload(){for(let shop=0;shop<2;shop++)for(let type=0;type<3;type++)for(let level=1;level<=4;level++)this.load.svg(itemKey(shop,type,level),'data:image/svg+xml;base64,'+btoa(itemSvg(shop,type,level)),{width:128,height:128});for(let i=0;i<6;i++)this.load.svg(customerKey(i),'data:image/svg+xml;base64,'+btoa(customerSvg(i)),{width:128,height:150});}
+ k=new Kitchen();ui!:Phaser.GameObjects.Container;fx!:Phaser.GameObjects.Container;selected=-1;drag=-1;moved=false;origin={x:0,y:0};ghost?:Phaser.GameObjects.Image;cells:Rect[]=[];orders:Rect[]=[];bin={x:402,y:375,w:58,h:48};message='Add free ingredients below. Drag matching items together.';notice='';noticeUntil=0;panel=false;decorTab:'wall'|'counter'|'wallProp'|'counterProp'='wall';soundOn=true;audio?:AudioContext;lastPaint=0;lastSave=0;
+ preload(){this.load.spritesheet('foods','art/food-v1.png',{frameWidth:256,frameHeight:256});this.load.spritesheet('people','art/customers-v1.png',{frameWidth:512,frameHeight:512});this.load.image('shop-wall','art/shop-v1.png');}
+ frame(type:number,level:number){return this.k.shop*12+type*4+level-1;}
  get menu(){return menus[this.k.shop];}
  create(){try{const saved=localStorage.getItem('merge-serve-v4')??localStorage.getItem('merge-serve-v3')??localStorage.getItem('merge-serve-v2');if(saved)this.k=Kitchen.restore(JSON.parse(saved));this.soundOn=localStorage.getItem('merge-serve-sound')!=='off';}catch{}this.ui=this.add.container(0,0);this.fx=this.add.container(0,0).setDepth(20);
  this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if(this.panel||this.k.shopReady||this.k.finished)return;const i=this.cells.findIndex(r=>inside(p,r));if(i<0||!this.k.board[i])return;this.drag=i;this.origin={x:p.x,y:p.y};this.moved=false;});
- this.input.on('pointermove',(p:Phaser.Input.Pointer)=>{if(this.drag<0)return;const started=!this.moved&&Phaser.Math.Distance.Between(p.x,p.y,this.origin.x,this.origin.y)>10;this.moved ||= started;if(started)this.paint();const item=this.k.board[this.drag];if(this.moved&&item){if(!this.ghost)this.ghost=this.add.image(p.x,p.y,itemKey(this.k.shop,item.type,item.level)).setDisplaySize(82,82).setDepth(50);this.ghost.setPosition(p.x,p.y-20);}});
+ this.input.on('pointermove',(p:Phaser.Input.Pointer)=>{if(this.drag<0)return;const started=!this.moved&&Phaser.Math.Distance.Between(p.x,p.y,this.origin.x,this.origin.y)>10;this.moved ||= started;if(started)this.paint();const item=this.k.board[this.drag];if(this.moved&&item){if(!this.ghost)this.ghost=this.add.image(p.x,p.y,'foods',this.frame(item.type,item.level)).setDisplaySize(82,82).setDepth(50);this.ghost.setPosition(p.x,p.y-20);}});
  this.input.on('pointerup',(p:Phaser.Input.Pointer)=>this.up(p));this.input.on('pointerupoutside',()=>this.cancel());window.addEventListener('blur',()=>{this.cancel();this.save();});window.addEventListener('pagehide',()=>this.save());document.addEventListener('visibilitychange',()=>{if(document.hidden){this.cancel();this.save();}});this.paint();this.save();}
  save(){try{localStorage.setItem('merge-serve-v4',JSON.stringify(this.k.snapshot()));}catch{}}
  cancel(){this.drag=-1;this.moved=false;this.ghost?.destroy();this.ghost=undefined;}
  tone(kind:'buy'|'merge'|'serve'|'error'|'bin'){if(!this.soundOn)return;try{this.audio??=new AudioContext();void this.audio.resume();const ctx=this.audio;({buy:[440],merge:[520,780],serve:[523,659,784],error:[170],bin:[240,150]}[kind]).forEach((f,i)=>{const osc=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+i*.09;osc.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.08,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.13);osc.connect(g);g.connect(ctx.destination);osc.start(t);osc.stop(t+.15);});}catch{}}
- box(r:Rect,c:number,radius=14){const g=this.add.graphics().fillStyle(c).fillRoundedRect(r.x,r.y,r.w,r.h,radius);this.ui.add(g);return g;}
- text(x:number,y:number,s:string,size=17,c=ink,width?:number){const t=this.add.text(x,y,s,{fontFamily:'Arial, sans-serif',fontSize:size,fontStyle:'bold',color:c,wordWrap:width?{width,useAdvancedWrap:true}:undefined});this.ui.add(t);return t;}
+ box(r:Rect,c:number,radius=14){const g=this.add.graphics().fillStyle(0x5d412b,.28).fillRoundedRect(r.x,r.y+4,r.w,r.h,radius).fillStyle(c).fillRoundedRect(r.x,r.y,r.w,r.h,radius).lineStyle(2,0x244a3e,.85).strokeRoundedRect(r.x,r.y,r.w,r.h,radius);this.ui.add(g);return g;}
+ text(x:number,y:number,s:string,size=17,c=ink,width?:number){const t=this.add.text(x,y,s,{fontFamily:'Trebuchet MS, Arial, sans-serif',fontSize:size,fontStyle:'bold',color:c,wordWrap:width?{width,useAdvancedWrap:true}:undefined});this.ui.add(t);return t;}
  button(r:Rect,label:string,fn:()=>void,c=green,size=17){this.box(r,c);this.text(r.x+r.w/2,r.y+r.h/2,label,size,'#fff').setOrigin(.5);this.hit(r,fn);}
  hit(r:Rect,fn:()=>void){const z=this.add.zone(r.x,r.y,r.w,r.h).setOrigin(0).setInteractive({useHandCursor:true});this.ui.add(z);z.on('pointerup',()=>{if(this.drag<0)fn();});}
  note(s:string,error=false){this.message=s;if(error){this.tone('error');this.cameras.main.shake(90,.002);}this.save();this.paint();}
- food(x:number,y:number,type:number,level:number,size:number){const icon=this.add.image(x,y,itemKey(this.k.shop,type,level)).setDisplaySize(size,size);this.ui.add(icon);return icon;}
+ food(x:number,y:number,type:number,level:number,size:number){const icon=this.add.image(x,y,'foods',this.frame(type,level)).setDisplaySize(size,size);this.ui.add(icon);return icon;}
  pop(s:string,x:number,y:number){const t=this.add.text(x,y,s,{fontSize:'23px',fontFamily:'Arial',fontStyle:'bold',color:ink,stroke:'#fffcf3',strokeThickness:5}).setOrigin(.5);this.fx.add(t);this.tweens.add({targets:t,y:y-35,alpha:0,duration:850,onComplete:()=>t.destroy()});}
  up(p:Phaser.Input.Pointer){const from=this.drag,moved=this.moved;this.cancel();if(this.panel||this.k.shopReady||this.k.finished)return;if(moved&&from>=0){if(inside(p,this.bin))this.discard(from);else{const c=this.orders.findIndex(r=>inside(p,r));if(c>=0)this.deliver(from,c);else{const to=this.cells.findIndex(r=>inside(p,r));if(to>=0)this.move(from,to);else this.note('Drop on a matching slot, customer order or bin.');}}return;}const i=this.cells.findIndex(r=>inside(p,r));if(i<0)return;if(this.selected>=0&&i!==this.selected)this.move(this.selected,i);else{this.selected=this.selected===i?-1:(this.k.board[i]?i:-1);this.paint();}}
  move(a:number,b:number){const merged=!!this.k.board[b];this.selected=-1;if(!this.k.move(a,b)){this.note('Match the same type and level. Maximum level: 4.',true);return;}this.note(merged?'Nice merge!':'Item moved.');if(merged){this.tone('merge');const r=this.cells[b];const flash=this.add.rectangle(r.x+r.w/2,r.y+r.h/2,r.w-8,r.h-8,0xe8f19c,.5);this.fx.add(flash);this.tweens.add({targets:flash,scale:1.1,alpha:0,duration:300,onComplete:()=>flash.destroy()});}}
@@ -30,36 +31,34 @@ class Shop extends Phaser.Scene{
  deliver(i:number,c:number){const before=this.k.unlocked;const result=this.k.deliver(i,c);if(!result.accepted){this.note('This customer needs a different item or level. Item returned.',true);return;}this.selected=-1;this.tone('serve');if(result.levelUp){if(this.k.unlocked>before)this.announce('🔓');else if(this.k.shopReady)this.announce('🔓 🏪');else if(this.k.finished)this.announce('✨ 🏆 ✨');this.message=this.k.shopReady?'Ready for a new shop? Your coins and decorations carry over.':this.k.finished?'All 20 levels mastered. Your shop is complete!':`Level ${this.k.level}! New customers are here.`;}else this.message=result.payment?`Order complete! +${result.payment} coins.`:'Item delivered. Payment arrives when the order is complete.';this.save();this.paint();if(result.payment)this.pop(`+${result.payment} 🪙`,365,90);}
  announce(s:string){this.notice=s;this.noticeUntil=this.time.now+2600;}
  buy(type:number){if(type>=this.k.unlocked){this.note(`Unlock Item ${type+1} after level ${type===1?5:10}.`);return;}if(!this.k.addItem(type)){this.note('Board full. Merge or discard an item.',true);return;}this.tone('buy');this.note('');}
- paint(){this.ui.removeAll(true);const k=this.k;this.box({x:0,y:0,w:480,h:860},cream,0);this.box({x:0,y:0,w:480,h:90},green,0);this.button({x:16,y:20,w:54,h:50},this.soundOn?'🔊':'🔇',()=>{this.soundOn=!this.soundOn;try{localStorage.setItem('merge-serve-sound',this.soundOn?'on':'off');}catch{}if(this.soundOn)this.tone('buy');this.paint();},0x39735f,25);
- const m=k.milestone;this.text(142,17,`${Math.max(0,k.completed-m.start)}/${m.end-m.start}`,17,'#eef1c1').setOrigin(.5,0);if(k.completed<10)this.food(223,26,k.completed<5?1:2,1,35);else this.text(223,26,k.finished?'🏆':'🏪',26).setOrigin(.5);this.box({x:82,y:43,w:164,h:12},0x163e34,6);if(k.progress>0)this.box({x:82,y:43,w:Math.max(12,164*k.progress),h:12},0xe8e99b,6);this.text(164,64,`◆ ${k.level}`,12,'#d5e2c3').setOrigin(.5,0);this.box({x:260,y:20,w:204,h:50},0x173f35);this.text(362,45,`🪙 ${k.coins.toLocaleString()}`,20,'#f0e7a5').setOrigin(.5);
+ paint(){this.ui.removeAll(true);const k=this.k;this.box({x:0,y:0,w:480,h:860},cream,0);this.box({x:0,y:0,w:480,h:90},0xffd9a8,0);this.button({x:16,y:20,w:54,h:50},this.soundOn?'🔊':'🔇',()=>{this.soundOn=!this.soundOn;try{localStorage.setItem('merge-serve-sound',this.soundOn?'on':'off');}catch{}if(this.soundOn)this.tone('buy');this.paint();},0x39735f,25);
+ const m=k.milestone;this.text(142,17,`${Math.max(0,k.completed-m.start)}/${m.end-m.start}`,20,ink).setOrigin(.5,0);if(k.completed<10)this.food(223,26,k.completed<5?1:2,1,35);else this.text(223,26,k.finished?'🏆':'🏪',26).setOrigin(.5);this.box({x:82,y:43,w:164,h:12},0x163e34,6);if(k.progress>0)this.box({x:82,y:43,w:Math.max(12,164*k.progress),h:12},0xe8e99b,6);this.text(164,64,`◆ ${k.level}`,12,ink).setOrigin(.5,0);this.box({x:260,y:20,w:204,h:50},0xfff1d6);this.text(362,45,`🪙 ${k.coins.toLocaleString()}`,23,ink).setOrigin(.5);
  this.shopScene();
- this.box({x:20,y:370,w:440,h:337},0xd9cfb7,20);this.button(this.bin,'🗑',()=>this.discard(this.selected),red,26);this.cells=[];
- for(let i=0;i<9;i++){const r={x:34+i%3*140,y:426+Math.floor(i/3)*91,w:132,h:82};this.cells.push(r);const item=k.board[i];this.box(r,this.selected===i?0xe8f19c:0xfffcf3);if(item)this.food(r.x+66,r.y+41,item.type,item.level,76);}
- this.button({x:20,y:720,w:440,h:50},'🎨',()=>{this.cancel();this.panel=true;this.message='';this.paint();},green,31);
- this.box({x:0,y:790,w:480,h:70},0xe3d9c0,0);[1,0,2].forEach((type,pos)=>{const x=14+pos*154,locked=type>=k.unlocked;this.button({x,y:798,w:144,h:54},'',()=>this.buy(type),locked?0x909780:green);if(locked)this.text(x+72,825,'🔒',29,'#fff').setOrigin(.5);else this.food(x+72,825,type,1,53);});
+ this.box({x:20,y:390,w:440,h:380},0xc78443,30);this.box({x:29,y:399,w:422,h:362},0xffddaa,25);this.button(this.bin,'🗑',()=>this.discard(this.selected),red,26);this.cells=[];
+ for(let i=0;i<9;i++){const r={x:43+i%3*134,y:429+Math.floor(i/3)*108,w:126,h:100};this.cells.push(r);const item=k.board[i];this.box(r,this.selected===i?0xd5f6a0:0xffe9c6);if(item)this.food(r.x+63,r.y+50,item.type,item.level,94);}
+ this.button({x:404,y:733,w:56,h:48},'🎨',()=>{this.cancel();this.panel=true;this.message='';this.paint();},green,31);
+ this.box({x:0,y:790,w:480,h:70},0xe6aa6d,0);[1,0,2].forEach((type,pos)=>{const x=14+pos*154,locked=type>=k.unlocked;this.button({x,y:796,w:144,h:57},'',()=>this.buy(type),locked?0x94ab91:0xffdf53);if(locked)this.text(x+72,825,'🔒',29,'#fff').setOrigin(.5);else this.food(x+72,825,type,1,53);});
  if(this.notice&&this.time.now<this.noticeUntil){this.box({x:55,y:620,w:370,h:42},0xe8f19c);this.text(240,641,this.notice,18).setOrigin(.5);}
  if(k.shopReady||k.finished){this.box({x:20,y:127,w:440,h:146},0xe6efb5);this.text(240,146,k.shopReady?'SHOP 2 UNLOCKED':'BOTH SHOPS MASTERED',22).setOrigin(.5,0);this.text(42,180,k.shopReady?'Coins + decorations carry over.\nBoard clears. No return to this shop.':'All orders complete. Your progress is saved.',15,ink,396);if(k.shopReady)this.button({x:60,y:225,w:360,h:38},'OPEN NEXT SHOP →',()=>{k.openShop();this.selected=-1;this.note('Welcome to Sweet Street! A fresh board and new dishes.');});}
  if(this.panel)this.decorationPanel();}
  shopScene(){const k=this.k;
  // Scene decorations live only on the wall/counter; merge board has one fixed theme.
- this.box({x:12,y:90,w:456,h:268},k.decoration('wall').color,14);
- const g=this.add.graphics();this.ui.add(g);g.lineStyle(1,0x7a897b,.12);for(let x=28;x<468;x+=42)g.lineBetween(x,122,x,330);
- this.box({x:24,y:98,w:266,h:24},green,7);this.text(157,110,this.menu.name,15,'#fff').setOrigin(.5);
+ const wallImage=this.add.image(240,230,'shop-wall').setDisplaySize(480,280);this.ui.add(wallImage);if(k.decoration('wall').id!=='wall-classic')wallImage.setTint(k.decoration('wall').color);this.text(240,137,this.menu.name,24,'#49301d').setOrigin(.5);
  // Exactly one wall accessory slot, outside every order bubble and customer.
- const wall=k.decoration('wallProp');this.box({x:414,y:142,w:43,h:62},0xffffff,7).setAlpha(.4);
- if(wall.id==='wall-prop-clock'){this.box({x:417,y:149,w:37,h:44},0x85674c,5);const clock=this.add.graphics();this.ui.add(clock);clock.fillStyle(0xfff9e8).fillCircle(435,170,15).lineStyle(2,0x485a4b).lineBetween(435,170,435,160).lineBetween(435,170,444,174);}
- else if(wall.id==='wall-prop-picture'){this.box({x:417,y:147,w:37,h:52},0x85674c,3);this.box({x:421,y:151,w:29,h:44},0xf8efd7,1);this.text(436,173,'🌿',24).setOrigin(.5);}
+ const wall=k.decoration('wallProp');this.box({x:428,y:190,w:39,h:62},0xffffff,7).setAlpha(.12);
+ if(wall.id==='wall-prop-clock'){this.box({x:430,y:199,w:37,h:44},0x85674c,5);const clock=this.add.graphics();this.ui.add(clock);clock.fillStyle(0xfff9e8).fillCircle(448,220,15).lineStyle(2,0x485a4b).lineBetween(448,220,448,210).lineBetween(448,220,457,224);}
+ else if(wall.id==='wall-prop-picture'){this.box({x:430,y:197,w:37,h:52},0x85674c,3);this.box({x:434,y:201,w:29,h:44},0xf8efd7,1);this.text(449,223,'🌿',24).setOrigin(.5);}
  const n=k.customers.length,cw=(382-(n-1)*7)/n;this.orders=[];
- k.customers.forEach((customer,i)=>{const r={x:20+i*(cw+7),y:132,w:cw,h:86},cx=r.x+cw/2;this.orders.push(r);
- if(!customer.paid){const person=this.add.image(cx,276,customerKey((k.level+i+k.shop)%6)).setDisplaySize(100,117);this.ui.add(person);}
- this.box(r,customer.paid?0xe0ebce:0xfffcf3,15);const tail=this.add.graphics().fillStyle(customer.paid?0xe0ebce:0xfffcf3).fillTriangle(cx-8,216,cx+8,216,cx,227);this.ui.add(tail);
+ k.customers.forEach((customer,i)=>{const r={x:20+i*(cw+7),y:174,w:cw,h:86},cx=r.x+cw/2;this.orders.push(r);
+ if(!customer.paid){const person=this.add.image(cx,302,'people',(k.level+i+k.shop)%6).setDisplaySize(130,130);this.ui.add(person);}
+ this.box(r,customer.paid?0xe0ebce:0xfffcf3,15);const tail=this.add.graphics().fillStyle(customer.paid?0xe0ebce:0xfffcf3).fillTriangle(cx-8,258,cx+8,258,cx,271);this.ui.add(tail);
  const iw=Math.min(59,(cw-10)/customer.items.length),total=iw*customer.items.length;
- customer.items.forEach((item,j)=>{const x=r.x+(cw-total)/2+j*iw+iw/2,icon=this.food(x,164,item.type,item.level,Math.min(53,iw-2));if(item.done){icon.setAlpha(.25);this.text(x,164,'✓',23,'#315d3b').setOrigin(.5);}});
- this.text(cx,202,customer.paid?'✓':`🪙 ${customer.payment}`,15,customer.paid?'#52774b':ink).setOrigin(.5);this.hit(r,()=>{if(!this.panel)this.deliver(this.selected,i);});});
+ customer.items.forEach((item,j)=>{const x=r.x+(cw-total)/2+j*iw+iw/2,icon=this.food(x,206,item.type,item.level,Math.min(53,iw-2));if(item.done){icon.setAlpha(.25);this.text(x,206,'✓',23,'#315d3b').setOrigin(.5);}});
+ this.text(cx,244,customer.paid?'✓':`🪙 ${customer.payment}`,15,customer.paid?'#52774b':ink).setOrigin(.5);this.hit(r,()=>{if(!this.panel)this.deliver(this.selected,i);});});
  // A single continuous counter sits in front of upper-body portraits.
- this.box({x:12,y:330,w:456,h:28},k.decoration('counter').color,7);this.box({x:12,y:321,w:456,h:12},0x966f50,4);this.box({x:27,y:339,w:426,h:4},0x836e59,2).setAlpha(.22);
+ this.box({x:0,y:357,w:480,h:30},k.decoration('counter').id==='counter-classic'?0xd99a5d:k.decoration('counter').color,3);this.box({x:0,y:346,w:480,h:15},0x966f50,4);this.box({x:12,y:367,w:456,h:4},0x836e59,2).setAlpha(.22);
  // Exactly one counter accessory slot, reserved at the right edge.
- const prop=k.decoration('counterProp');if('symbol' in prop)this.text(436,322,prop.symbol,35).setOrigin(.5,1);
+ const prop=k.decoration('counterProp');if('symbol' in prop)this.text(445,348,prop.symbol,35).setOrigin(.5,1);
  }
  decorationPanel(){const k=this.k;this.box({x:15,y:105,w:450,h:670},0x173f35);const shield=this.add.zone(0,0,480,860).setOrigin(0).setInteractive();this.ui.add(shield);this.text(34,128,'DECORATIONS',25,'#fff');this.button({x:393,y:120,w:48,h:43},'×',()=>{this.panel=false;this.paint();},0x52775d,26);
  const tabs=[['wall','Wall'],['counter','Counter'],['wallProp','Wall slot'],['counterProp','Counter slot']] as const;
