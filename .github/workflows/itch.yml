@@ -1,0 +1,78 @@
+name: Check and deploy to itch.io
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: itch-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          python -m pip install -r scripts/requirements-art.txt
+      - name: Test game rules and layout
+        run: pnpm test
+      - name: Verify sliced assets
+        run: pnpm test:assets
+      - name: Type-check and build
+        run: pnpm build
+      - name: Keep browser build
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-build
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy:
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-build
+          path: dist
+      - name: Check itch credential
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ]; then
+            echo '::error::Add the BUTLER_API_KEY repository Actions secret. See docs/mobile-workflow.md.'
+            exit 1
+          fi
+      - name: Install official itch.io Butler
+        run: |
+          curl --fail --location --retry 3 https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default -o "$RUNNER_TEMP/butler.zip"
+          unzip -q "$RUNNER_TEMP/butler.zip" -d "$RUNNER_TEMP/butler"
+          chmod +x "$RUNNER_TEMP/butler/butler"
+          "$RUNNER_TEMP/butler/butler" -V
+      - name: Deploy browser build
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          test -f dist/index.html
+          "$RUNNER_TEMP/butler/butler" push dist mhuzaifaj/merge-and-serve:html5 --userversion "${GITHUB_SHA}"
+      - name: Publish result link
+        run: echo 'Game build uploaded to https://mhuzaifaj.itch.io/merge-and-serve' >> "$GITHUB_STEP_SUMMARY"

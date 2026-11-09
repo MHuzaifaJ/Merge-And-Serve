@@ -2,6 +2,8 @@
 
 A portrait Phaser + TypeScript + Vite game with one endless fast-food shop.
 
+For mobile/cloud development and automatic itch publishing, see [the setup guide](docs/mobile-workflow.md). The newly locked Snack Shop art direction is documented in [docs/art-direction.md](docs/art-direction.md); it is a mockup reference pending implementation.
+
 ## Play
 
 Start with zero coins and nine shared merge slots. All three free generators are available from the start: **Burger / Fries / Drink**, left to right. Merge identical type and stage up to stage four; move items to empty slots or discard them for free. Base items are complete food, not ingredients.
