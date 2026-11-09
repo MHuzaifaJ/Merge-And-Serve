@@ -4,6 +4,7 @@ import './style.css';
 
 // UI coordinates stay logical; canvas and text backing stores render at device density.
 const DENSITY=Math.min(3,Math.max(2,Math.ceil(window.devicePixelRatio||1)));
+const FONT='Lilita One, Trebuchet MS, Arial, sans-serif';
 const ink='#183e37',menus=['Lunch Corner','Sweet Street'];
 type Point={x:number;y:number};
 type Rect=Point&{w:number;h:number};
@@ -27,6 +28,7 @@ class Shop extends Phaser.Scene{
  registerFrames(){
   this.textures.get('controls').add('green',0,0,620,512,300);
   this.textures.get('controls').add('gold',0,512,620,512,300);
+  this.textures.get('shop-wall').add('swatch',0,40,300,400,400);this.textures.get('wood').add('swatch',0,200,250,500,500);
   const panels:Record<Panel,number[]>={cream:[16,112,480,336],wood:[528,108,480,340],card:[1040,112,480,336],bubble:[16,600,480,345],track:[526,697,484,135],fill:[1040,696,480,135]};
   for(const [key,[x,y,w,h]] of Object.entries(panels))this.textures.get('panels').add(key,0,x,y,w,h);
   for(const [key,n] of [['icons',3],['props',2]] as const){const t=this.textures.get(key),source=t.getSourceImage() as HTMLImageElement;
@@ -57,16 +59,20 @@ class Shop extends Phaser.Scene{
 
  logical(p:Phaser.Input.Pointer){return this.cameras.main.getWorldPoint(p.x,p.y);}
  frame(type:number,level:number){return this.k.shop*12+type*4+level-1;}
- art(key:string,x:number,y:number,w:number,h:number,frame?:number|string){const image=this.add.image(x,y,key,frame).setDisplaySize(w,h);this.ui.add(image);return image;}
- surface(r:Rect,frame:Panel='cream'){
+ art(key:string,x:number,y:number,w:number,h:number,frame?:number|string){const image=this.add.image(x,y,key,frame??'__BASE').setDisplaySize(w,h);this.ui.add(image);return image;}
+ surface(r:Rect,frame:Panel='cream',scale=.25){
   // Nine-slicing preserves painted borders on large dialogs and small cards alike.
-  const scale=.25,border=frame==='track'||frame==='fill'?44:84;
+  const border=frame==='track'||frame==='fill'?64:84;
   if(this.game.renderer.type!==Phaser.WEBGL)return this.art('panels',r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);
   const image=this.add.nineslice(r.x+r.w/2,r.y+r.h/2,'panels',frame,r.w/scale,r.h/scale,border,border,border,border).setScale(scale);this.ui.add(image);return image;
  }
  icon(x:number,y:number,key:keyof typeof ICON,size=32){return this.art('icons',x,y,size,size,ICON[key]);}
- text(x:number,y:number,s:string,size=17,c=ink,width?:number){const t=this.add.text(x,y,s,{fontFamily:'Trebuchet MS, Arial, sans-serif',fontSize:size,fontStyle:'bold',color:c,wordWrap:width?{width,useAdvancedWrap:true}:undefined}).setResolution(DENSITY);this.ui.add(t);return t;}
- button(r:Rect,label:string,fn:()=>void,active=false,size=17){this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,active?'gold':'green');this.text(r.x+r.w/2,r.y+r.h/2,label,size).setOrigin(.5);this.hit(r,fn);}
+ text(x:number,y:number,s:string,size=17,c=ink,width?:number){const t=this.add.text(x,y,s,{fontFamily:FONT,fontSize:size,fontStyle:'normal',color:c,wordWrap:width?{width,useAdvancedWrap:true}:undefined}).setResolution(DENSITY);this.ui.add(t);return t;}
+ buttonSurface(r:Rect,active=false){const frame=active?'gold':'green',scale=.16;
+  if(this.game.renderer.type!==Phaser.WEBGL)return this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);
+  const image=this.add.nineslice(r.x+r.w/2,r.y+r.h/2,'controls',frame,r.w/scale,r.h/scale,120,120,96,96).setScale(scale);this.ui.add(image);return image;
+ }
+ button(r:Rect,label:string,fn:()=>void,active=false,size=17){this.buttonSurface(r,active);this.text(r.x+r.w/2,r.y+r.h/2,label,size).setOrigin(.5);this.hit(r,fn);}
  hit(r:Rect,fn:()=>void){const z=this.add.zone(r.x,r.y,r.w,r.h).setOrigin(0).setInteractive({useHandCursor:true});this.ui.add(z);z.on('pointerup',()=>{if(this.drag<0)fn();});}
  control(r:Rect,frame:number,fn:()=>void){this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);this.hit(r,fn);}
  food(x:number,y:number,type:number,level:number,size:number){return this.art('foods',x,y,size,size,this.frame(type,level));}
@@ -75,7 +81,7 @@ class Shop extends Phaser.Scene{
  cancel(){this.drag=-1;this.moved=false;this.ghost?.destroy();this.ghost=undefined;}
  tone(kind:'buy'|'merge'|'serve'|'error'|'bin'){if(!this.soundOn)return;try{this.audio??=new AudioContext();void this.audio.resume();const ctx=this.audio;({buy:[440],merge:[520,780],serve:[523,659,784],error:[170],bin:[240,150]}[kind]).forEach((f,i)=>{const osc=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+i*.09;osc.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.08,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.13);osc.connect(g);g.connect(ctx.destination);osc.start(t);osc.stop(t+.15);});}catch{}}
  note(s:string,error=false){this.message=s;if(error){this.tone('error');this.cameras.main.shake(90,.002);}this.save();this.paint();}
- pop(amount:number,x:number,y:number){const group=this.add.container(x,y);const coin=this.add.image(-30,0,'icons',ICON.coin).setDisplaySize(34,34),t=this.add.text(-9,0,`+${amount}`,{fontSize:'23px',fontFamily:'Trebuchet MS',fontStyle:'bold',color:ink,stroke:'#fffcf3',strokeThickness:4}).setResolution(DENSITY).setOrigin(0,.5);group.add([coin,t]);this.fx.add(group);this.tweens.add({targets:group,y:y-35,alpha:0,duration:850,onComplete:()=>group.destroy()});}
+ pop(amount:number,x:number,y:number){const group=this.add.container(x,y);const coin=this.add.image(-30,0,'icons',ICON.coin).setDisplaySize(34,34),t=this.add.text(-9,0,`+${amount}`,{fontSize:'23px',fontFamily:FONT,fontStyle:'normal',color:ink,stroke:'#fffcf3',strokeThickness:4}).setResolution(DENSITY).setOrigin(0,.5);group.add([coin,t]);this.fx.add(group);this.tweens.add({targets:group,y:y-35,alpha:0,duration:850,onComplete:()=>group.destroy()});}
  up(p:Point){const from=this.drag,moved=this.moved;this.cancel();if(this.panel||this.k.shopReady||this.k.finished)return;if(moved&&from>=0){if(inside(p,this.bin))this.discard(from);else{const c=this.orders.findIndex(r=>inside(p,r));if(c>=0)this.deliver(from,c);else{const to=this.cells.findIndex(r=>inside(p,r));if(to>=0)this.move(from,to);}}return;}const i=this.cells.findIndex(r=>inside(p,r));if(i<0)return;if(this.selected>=0&&i!==this.selected)this.move(this.selected,i);else{this.selected=this.selected===i?-1:(this.k.board[i]?i:-1);this.paint();}}
  move(a:number,b:number){const merged=!!this.k.board[b];this.selected=-1;if(!this.k.move(a,b)){this.note('',true);return;}this.note('');if(merged){this.tone('merge');const r=this.cells[b],sparkle=this.add.image(r.x+r.w/2,r.y+r.h/2,'icons',ICON.sparkle).setDisplaySize(92,92);this.fx.add(sparkle);this.tweens.add({targets:sparkle,scaleX:sparkle.scaleX*1.35,scaleY:sparkle.scaleY*1.35,alpha:0,duration:380,onComplete:()=>sparkle.destroy()});}}
  discard(i:number){if(!this.k.bin(i))return;this.selected=-1;this.tone('bin');this.note('');}
@@ -85,8 +91,8 @@ class Shop extends Phaser.Scene{
  paint(){this.ui.removeAll(true);const k=this.k;
   this.surface({x:0,y:0,w:480,h:85});this.shopScene();
   const sound={x:8,y:8,w:62,h:62};if(this.soundOn)this.control(sound,0,()=>this.toggleSound());else{this.icon(39,39,'mute',62);this.hit(sound,()=>this.toggleSound());}
-  const m=k.milestone;this.art('panels',186,38,208,43,'track');
-  if(k.progress>0){const fill=this.art('panels',88,23,196,31,'fill').setOrigin(0);fill.setCrop(0,0,fill.frame.width*Math.min(1,k.progress),fill.frame.height);}
+  const m=k.milestone;this.surface({x:82,y:17,w:208,h:43},'track');
+  if(k.progress>0){const width=196*Math.min(1,k.progress);this.surface({x:88,y:23,w:width,h:31},'fill',Math.min(.23,width/128));}
   this.text(169,37,`${Math.max(0,k.completed-m.start)}/${m.end-m.start}`,27).setOrigin(.5).setStroke('#fff8df',3);
   if(k.completed<10)this.food(269,36,k.completed<5?1:2,1,48);else this.icon(269,36,k.finished?'trophy':'shop',43);
   this.text(177,68,`${k.level}`,12).setOrigin(.5);
@@ -94,21 +100,20 @@ class Shop extends Phaser.Scene{
   this.art('board',239,580,410,405);this.cells=[];
   for(let i=0;i<9;i++){const r={x:80+i%3*106,y:432+Math.floor(i/3)*102,w:100,h:95};this.cells.push(r);const item=k.board[i];if(this.selected===i)this.surface(r,'card').setTint(0xe8f5a0).setAlpha(.65);if(item)this.food(r.x+50,r.y+47,item.type,item.level,107);}
   this.control(this.bin,1,()=>this.discard(this.selected));this.control({x:396,y:727,w:68,h:68},2,()=>{this.cancel();this.panel=true;this.message='';this.paint();});
-  [1,0,2].forEach((type,pos)=>{const r={x:17+pos*154,y:774,w:138,h:78},locked=type>=k.unlocked;this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,locked?'green':'gold');this.hit(r,()=>this.buy(type));if(locked)this.art('controls',r.x+r.w/2,r.y+r.h/2,64,64,5);else this.food(r.x+r.w/2,r.y+r.h/2,type,1,90);});
+  [1,0,2].forEach((type,pos)=>{const r={x:17+pos*154,y:774,w:138,h:78},locked=type>=k.unlocked;this.buttonSurface(r,!locked);this.hit(r,()=>this.buy(type));if(locked)this.art('controls',r.x+r.w/2,r.y+r.h/2,64,64,5);else this.food(r.x+r.w/2,r.y+r.h/2,type,1,90);});
   if(this.notice&&this.time.now<this.noticeUntil&&!k.shopReady&&!k.finished){this.surface({x:152,y:687,w:176,h:58},'wood');this.icon(196,716,'unlock',42);if(this.notice==='item')this.food(262,716,Math.max(1,k.unlocked-1),1,52);else this.icon(262,716,this.notice==='shop'?'shop':'trophy',46);}
   if(k.shopReady||k.finished)this.completionPanel();if(this.panel)this.decorationPanel();
  }
  toggleSound(){this.soundOn=!this.soundOn;if(!this.review)try{localStorage.setItem('merge-serve-sound',this.soundOn?'on':'off');}catch{}if(this.soundOn)this.tone('buy');this.paint();}
  shopScene(){const k=this.k,wallImage=this.art('shop-wall',240,220,480,280);if(k.decoration('wall').id!=='wall-classic')wallImage.setTint(k.decoration('wall').color);
-  this.text(240,127,menus[k.shop],25,'#49301d').setFontFamily('Georgia, serif').setOrigin(.5);
+  this.text(240,127,menus[k.shop],25,'#49301d').setOrigin(.5);
   const wallProp=props[k.equipped.wallProp];if(wallProp!==undefined)this.art('props',451,214,58,80,wallProp);
   const n=k.customers.length,cw=n===3?128:150,gap=n===3?10:22,total=cw*n+gap*(n-1),start=(430-total)/2;this.orders=[];
   k.customers.forEach((customer,i)=>{const r={x:start+i*(cw+gap),y:153,w:cw,h:100},cx=r.x+cw/2;this.orders.push(r);
    if(!customer.paid)this.art('people',cx,299,n===3?155:174,n===3?155:174,(k.level+i+k.shop)%6);
    const bubble=this.art('panels',cx,204,cw+4,107,'bubble');if(customer.paid)bubble.setTint(0xe3efca);
    const iw=Math.min(70,(cw-12)/customer.items.length),total=iw*customer.items.length;
-   customer.items.forEach((item,j)=>{const x=r.x+(cw-total)/2+j*iw+iw/2,icon=this.food(x,183,item.type,item.level,Math.min(68,iw));if(item.done){icon.setAlpha(.25);this.icon(x,183,'check',30);}});
-   if(customer.paid)this.icon(cx,222,'check',31);else this.price(cx-1,221,customer.payment,18);
+   if(customer.paid)this.icon(cx,195,'check',46);else customer.items.forEach((item,j)=>{const x=r.x+(cw-total)/2+j*iw+iw/2,icon=this.food(x,195,item.type,item.level,Math.min(72,iw));if(item.done){icon.setAlpha(.25);this.icon(x,195,'check',30);}});
    this.hit(r,()=>{if(!this.panel)this.deliver(this.selected,i);});});
   const counter=this.art('wood',240,602,480,516);if(k.decoration('counter').id!=='counter-classic')counter.setTint(k.decoration('counter').color);
   const prop=props[k.equipped.counterProp];if(prop!==undefined)this.art('props',448,316,76,76,prop);
@@ -118,12 +123,12 @@ class Shop extends Phaser.Scene{
   if(k.shopReady)this.button({x:110,y:266,w:260,h:45},'OPEN NEXT SHOP',()=>{k.openShop();this.selected=-1;this.note('');},true,17);else this.icon(240,281,'sparkle',54);
  }
  decorationPreview(id:string,x:number,y:number,size:number){const d=DECORATIONS.find(d=>d.id===id)!;
-  if(d.category==='wall'||d.category==='counter'){const image=this.art(d.category==='wall'?'shop-wall':'wood',x,y,size,size);if(d.id!=='wall-classic'&&d.id!=='counter-classic')image.setTint(d.color);}
+  if(d.category==='wall'||d.category==='counter'){this.surface({x:x-size/2,y:y-size/2,w:size,h:size},'wood',.12);const image=this.art(d.category==='wall'?'shop-wall':'wood',x,y,size-22,size-22,'swatch');if(d.id!=='wall-classic'&&d.id!=='counter-classic')image.setTint(d.color);}
   else if(props[id]!==undefined)this.art('props',x,y,size,size,props[id]);else this.icon(x,y,'empty',size);
  }
  decorationPanel(){const k=this.k;
   this.surface({x:0,y:0,w:480,h:860},'card').setTint(0x224e42).setAlpha(.72);const shield=this.add.zone(0,0,480,860).setOrigin(0).setInteractive();this.ui.add(shield);
-  this.surface({x:15,y:105,w:450,h:670},'wood');this.text(240,143,'DECORATIONS',26).setFontFamily('Georgia, serif').setOrigin(.5);
+  this.surface({x:15,y:105,w:450,h:670},'wood');this.text(240,143,'DECORATIONS',26).setOrigin(.5);
   this.icon(423,140,'close',43);this.hit({x:400,y:117,w:46,h:46},()=>{this.panel=false;this.paint();});
   const tabs=[['wall','Wall'],['counter','Counter'],['wallProp','Wall slot'],['counterProp','Counter slot']] as const;
   tabs.forEach(([category,label],i)=>this.button({x:30+i*105,y:184,w:99,h:45},label,()=>{this.decorTab=category;this.message='';this.paint();},this.decorTab===category,13));
@@ -136,4 +141,5 @@ class Shop extends Phaser.Scene{
  }
  update(t:number){if(t-this.lastSave>=1000){this.save();this.lastSave=t;}if(this.notice&&t>=this.noticeUntil&&this.drag<0){this.notice='';this.paint();}}
 }
-new Phaser.Game({type:Phaser.AUTO,parent:'game',width:480*DENSITY,height:860*DENSITY,backgroundColor:'#153d37',scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:Shop,render:{antialias:true}});
+// Wait for the bundled display font before Phaser creates canvas text textures.
+document.fonts.load('24px "Lilita One"').catch(()=>[]).then(()=>new Phaser.Game({type:Phaser.AUTO,parent:'game',width:480*DENSITY,height:860*DENSITY,backgroundColor:'#153d37',scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:Shop,render:{antialias:true}}));

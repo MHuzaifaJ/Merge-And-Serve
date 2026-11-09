@@ -29,3 +29,13 @@ Built-in image_gen tool, approved mockup used as reference for all three assets:
 Coverage: top bar/background, order bubbles/tails, progress and coin bars, reward icons, partial/full order ticks, coin payment float, decoration overlay/frame/cards/tabs/buttons/prices/thumbnails, empty accessory, four props, sound muted state, selection tint, merge sparkles, unlock banner, next-shop dialog, final completion and loading view. All are PNG surfaces/icons; numbers, shop name and necessary menu text remain dynamic. Invisible input zones and cameras/tweens are engine behavior, not visible primitives. No runtime graphics/rectangle/circle drawing or emoji glyph icons remain. Old unused SVG generators were retired.
 
 Visual QA reviewed: three customers with three-item orders, all four decoration tabs, owned/equipped/purchasable states, insufficient funds, successful purchase, shop transition, shop 2 items, final completion, unlock notice and muted sound. Dev-only review fixtures never save and are removed from production. Model tests protect payment/merging/progression/save/decor ownership rules.
+
+## Final UI polish and icon-only orders
+
+- Order bubbles show only requested item icons and delivery checks. Payment values/coin icons are removed from orders; full-order wallet payouts and floating payment feedback are retained.
+- Progress fill uses an intact nine-sliced painted pill with rounded caps, not a cropped bitmap edge.
+- Green/gold buttons share one fixed-scale nine-slice border treatment, including bottom spawners, menu tabs and purchase/transition buttons.
+- Wall/counter previews show square material details inside painted wooden frames, rather than squeezed whole-scene crops. Explicit __BASE frames keep the main shop/counter artwork intact.
+- Lilita One is bundled locally under SIL OFL (public/fonts/OFL.txt) and used for all dynamic UI, headers, shop names, wallet counts and loading text. Phaser waits for it to load before creating text textures; no external font request is made by players.
+
+Browser checks: one/two/three-customer orders without amounts, paid-order check state, rounded 10%/60%/80% progress, framed wall samples, loaded custom font, and a completed order paying +30 into the wallet. Existing model tests protect economy and progression.

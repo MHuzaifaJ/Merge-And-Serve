@@ -38,3 +38,5 @@ Build uses the official Rollup WASM package through a pnpm override for Windows 
 All visible surfaces and icons use the approved PNG art direction: speech bubbles, progress/coin bars, decoration dialog/cards/tabs/buttons and previews, muted sound, check/close/coin/reward symbols, wall/counter props, selection/merge feedback, milestone notices, transition/completion panels and loading view. Text and numbers stay dynamic; invisible Phaser zones provide input. No runtime Graphics/Rectangle primitives or emoji icons remain. Text/backing canvas render at 2x–3x density.
 
 Development-only visual review: append `?review=three`, `decor-wall`, `decor-counter`, `decor-wallProp`, `decor-counterProp`, `shop2`, `shopReady`, `finished`, `unlock` or `muted`. Review fixtures do not save, and Vite strips their setup from production builds.
+
+Order bubbles display icons/checks only, without payment numbers. Payout rules remain unchanged. Progress pills and green/gold controls preserve painted caps/borders with nine-slicing; material previews use framed detail swatches. All UI text uses the locally bundled Lilita One font (SIL OFL license included in public/fonts/OFL.txt).
