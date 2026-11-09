@@ -24,6 +24,8 @@ for key,info in layout['atlases'].items():
             assert atlas.crop((x,y-n,x+w,y-n+1)).tobytes()==actual.crop((0,0,w,1)).tobytes()
             assert atlas.crop((x,y+h-1+n,x+w,y+h+n)).tobytes()==actual.crop((0,h-1,w,h)).tobytes()
         e=info['extrude'];p=info['padding']
+        for box,pixel in [((x-e,y-e,x,y),actual.getpixel((0,0))),((x+w,y-e,x+w+e,y),actual.getpixel((w-1,0))),((x-e,y+h,x,y+h+e),actual.getpixel((0,h-1))),((x+w,y+h,x+w+e,y+h+e),actual.getpixel((w-1,h-1)))]:
+            assert all(v==pixel for v in atlas.crop(box).getdata()),(key,f['name'],'corner extrusion')
         for box in [(x-e-p,y-e-p,x-e,y+h+e+p),(x+w+e,y-e-p,x+w+e+p,y+h+e+p),(x-e,y-e-p,x+w+e,y-e),(x-e,y+h+e,x+w+e,y+h+e+p)]:
             assert not atlas.crop(box).getchannel('A').getbbox(),(key,f['name'],'nontransparent outer gutter')
         count+=1
@@ -41,5 +43,6 @@ for name in ['board-v2.png','shop-v1.png','wood-v2.png']:
     if name=='board-v2.png':
         b=image.getchannel('A').point(lambda p:255 if p>=32 else 0).getbbox();assert b and min(b[0],b[1],image.width-b[2],image.height-b[3])>=8
     print('PASS independent texture',name,'within 2048px, no shared neighbours')
+(ROOT/'outputs').mkdir(exist_ok=True)
 (ROOT/'outputs/slicing-verification.json').write_text(json.dumps(dict(totalFrames=count,checks=checks),indent=2)+'\n')
 print('PASS',count,'unique frames plus 2 shared button aliases')
