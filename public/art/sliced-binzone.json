@@ -1,0 +1,41 @@
+{
+  "frames": {
+    "0": {
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "w": 300,
+        "h": 1531
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 1531
+      },
+      "sourceSize": {
+        "w": 300,
+        "h": 1531
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "Merge & Serve lossless slicer",
+    "version": "1",
+    "image": "sliced-binzone.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1024,
+      "h": 1568
+    },
+    "scale": "1",
+    "padding": 4,
+    "extrude": 4
+  }
+}

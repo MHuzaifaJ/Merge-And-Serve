@@ -1,0 +1,113 @@
+{
+  "frames": {
+    "0": {
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "w": 596,
+        "h": 217
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 596,
+        "h": 217
+      },
+      "sourceSize": {
+        "w": 596,
+        "h": 217
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "1": {
+      "frame": {
+        "x": 620,
+        "y": 8,
+        "w": 589,
+        "h": 219
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 589,
+        "h": 219
+      },
+      "sourceSize": {
+        "w": 589,
+        "h": 219
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "2": {
+      "frame": {
+        "x": 8,
+        "y": 243,
+        "w": 595,
+        "h": 218
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 595,
+        "h": 218
+      },
+      "sourceSize": {
+        "w": 595,
+        "h": 218
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "3": {
+      "frame": {
+        "x": 619,
+        "y": 243,
+        "w": 602,
+        "h": 211
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 602,
+        "h": 211
+      },
+      "sourceSize": {
+        "w": 602,
+        "h": 211
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "Merge & Serve lossless slicer",
+    "version": "1",
+    "image": "sliced-nameplates.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1536,
+      "h": 480
+    },
+    "scale": "1",
+    "padding": 4,
+    "extrude": 4
+  }
+}

@@ -7,7 +7,8 @@ layout=json.loads((ROOT/'src/slice-layout.json').read_text());count=0;checks=[]
 for key,info in layout['atlases'].items():
     atlas=Image.open(ROOT/'public'/info['image']).convert('RGBA');data=json.loads((ROOT/'public'/info['data']).read_text());source=Image.open(ROOT/info['source']).convert('RGBA') if info['source']!='material samples' else None
     if source is None:
-        wall=Image.open(ROOT/'public/art/shop-v1.png').convert('RGBA').crop((40,300,440,700));wood=Image.open(ROOT/'public/art/wood-v2.png').convert('RGBA').crop((200,250,700,750));source=Image.new('RGBA',(900,500));source.paste(wall,(0,0));source.paste(wood,(400,0))
+        from slice_assets import build_samples
+        source,_=build_samples()
     covered=Image.new('L',source.size)
     for f in info['frames']:
         x,y,w,h=[f['frame'][n] for n in ('x','y','w','h')];actual=atlas.crop((x,y,x+w,y+h));sw,sh=[f['sourceSize'][n] for n in ('w','h')];ox,oy=[f['spriteSourceSize'][n] for n in ('x','y')]
@@ -25,7 +26,7 @@ for key,info in layout['atlases'].items():
             assert atlas.crop((x,y+h-1+n,x+w,y+h+n)).tobytes()==actual.crop((0,h-1,w,h)).tobytes()
         e=info['extrude'];p=info['padding']
         for box,pixel in [((x-e,y-e,x,y),actual.getpixel((0,0))),((x+w,y-e,x+w+e,y),actual.getpixel((w-1,0))),((x-e,y+h,x,y+h+e),actual.getpixel((0,h-1))),((x+w,y+h,x+w+e,y+h+e),actual.getpixel((w-1,h-1)))]:
-            assert all(v==pixel for v in atlas.crop(box).getdata()),(key,f['name'],'corner extrusion')
+            assert all(v==pixel for v in atlas.crop(box).get_flattened_data()),(key,f['name'],'corner extrusion')
         for box in [(x-e-p,y-e-p,x-e,y+h+e+p),(x+w+e,y-e-p,x+w+e+p,y+h+e+p),(x-e,y-e-p,x+w+e,y-e),(x-e,y+h+e,x+w+e,y+h+e+p)]:
             assert not atlas.crop(box).getchannel('A').getbbox(),(key,f['name'],'nontransparent outer gutter')
         count+=1
@@ -38,7 +39,7 @@ for key,info in layout['atlases'].items():
             assert width/scale+1e-6>=c['left']+c['right'] and height/scale+1e-6>=c['top']+c['bottom']
     checks.append(dict(atlas=key,frames=len(info['frames']),size=info['size'],lossless=True,completeBounds=True,guardPixels=e+p,pivots=True,nineSlice=True))
     print('PASS',key,len(info['frames']),'frames: lossless, complete, padded, aligned')
-for name in ['board-v2.png','shop-v1.png','wood-v2.png']:
+for name in ['board-v2.png','loading-counter.png']:
     image=Image.open(ROOT/'public/art'/name).convert('RGBA');assert max(image.size)<=2048
     if name=='board-v2.png':
         b=image.getchannel('A').point(lambda p:255 if p>=32 else 0).getbbox();assert b and min(b[0],b[1],image.width-b[2],image.height-b[3])>=8

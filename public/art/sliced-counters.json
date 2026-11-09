@@ -4,20 +4,20 @@
       "frame": {
         "x": 8,
         "y": 8,
-        "w": 509,
-        "h": 544
+        "w": 627,
+        "h": 627
       },
       "rotated": false,
-      "trimmed": true,
+      "trimmed": false,
       "spriteSourceSize": {
-        "x": 16,
-        "y": 16,
-        "w": 509,
-        "h": 544
+        "x": 0,
+        "y": 0,
+        "w": 627,
+        "h": 627
       },
       "sourceSize": {
-        "w": 541,
-        "h": 576
+        "w": 627,
+        "h": 627
       },
       "pivot": {
         "x": 0.5,
@@ -26,22 +26,22 @@
     },
     "1": {
       "frame": {
-        "x": 533,
+        "x": 651,
         "y": 8,
-        "w": 345,
-        "h": 541
+        "w": 627,
+        "h": 627
       },
       "rotated": false,
-      "trimmed": true,
+      "trimmed": false,
       "spriteSourceSize": {
-        "x": 16,
-        "y": 16,
-        "w": 345,
-        "h": 541
+        "x": 0,
+        "y": 0,
+        "w": 627,
+        "h": 627
       },
       "sourceSize": {
-        "w": 377,
-        "h": 573
+        "w": 627,
+        "h": 627
       },
       "pivot": {
         "x": 0.5,
@@ -51,60 +51,60 @@
     "2": {
       "frame": {
         "x": 8,
-        "y": 568,
-        "w": 482,
-        "h": 567
+        "y": 651,
+        "w": 627,
+        "h": 627
       },
       "rotated": false,
-      "trimmed": true,
+      "trimmed": false,
       "spriteSourceSize": {
-        "x": 16,
-        "y": 16,
-        "w": 482,
-        "h": 567
+        "x": 0,
+        "y": 0,
+        "w": 627,
+        "h": 627
       },
       "sourceSize": {
-        "w": 514,
-        "h": 599
+        "w": 627,
+        "h": 627
       },
       "pivot": {
         "x": 0.5,
-        "y": 1
+        "y": 0.5
       }
     },
     "3": {
       "frame": {
-        "x": 506,
-        "y": 568,
-        "w": 508,
-        "h": 570
+        "x": 651,
+        "y": 651,
+        "w": 627,
+        "h": 627
       },
       "rotated": false,
-      "trimmed": true,
+      "trimmed": false,
       "spriteSourceSize": {
-        "x": 16,
-        "y": 16,
-        "w": 508,
-        "h": 570
+        "x": 0,
+        "y": 0,
+        "w": 627,
+        "h": 627
       },
       "sourceSize": {
-        "w": 540,
-        "h": 602
+        "w": 627,
+        "h": 627
       },
       "pivot": {
         "x": 0.5,
-        "y": 1
+        "y": 0.5
       }
     }
   },
   "meta": {
     "app": "Merge & Serve lossless slicer",
     "version": "1",
-    "image": "sliced-props.png",
+    "image": "sliced-counters.png",
     "format": "RGBA8888",
     "size": {
-      "w": 1024,
-      "h": 1152
+      "w": 1536,
+      "h": 1312
     },
     "scale": "1",
     "padding": 4,

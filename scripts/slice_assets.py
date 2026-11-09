@@ -49,7 +49,7 @@ def frame_info(name,box,kind):
     return dict(name=str(name),box=box,size=size,dest=dest,pivot=pivot,kind=kind)
 
 def make_atlas(key,im,entries,aliases=None,insets=None):
-    aliases=aliases or {};insets=insets or {};width=1536 if key=='panels' else 1024
+    aliases=aliases or {};insets=insets or {};width=1600 if key=='walls' else 1536 if key in ('panels','counters','nameplates') else 1024
     x=y=rowh=0;placements=[]
     for e in entries:
         bx,by,bX,bY=e['box'];w=bX-bx;h=bY-by;pw=w+2*GUARD;ph=h+2*GUARD
@@ -80,9 +80,19 @@ def make_atlas(key,im,entries,aliases=None,insets=None):
         f=frames[name]['frame'];assert v['left']+v['right']<f['w'] and v['top']+v['bottom']<f['h'],(key,name,f,v)
     return dict(image=f'art/sliced-{key}.png',data=f'art/sliced-{key}.json',size=[width,height],frames=audit,aliases=aliases,insets=insets,padding=PAD,extrude=EXTRUDE)
 
+def build_samples():
+    samples=Image.new('RGBA',(2048,256));entries=[]
+    for row,(group,file) in enumerate([('wall','walls-v1.png'),('counter','counters-v1.png')]):
+        im=Image.open(SRC/file).convert('RGBA')
+        for i,(x,y,X,Y) in enumerate(regions(im,2,2)):
+            px=x+(X-x-256)//2;py=y+round((Y-y)*(.1 if group=='wall' else .25))
+            crop=im.crop((px,py,px+256,py+256));j=row*4+i;samples.paste(crop,(j*256,0))
+            entries.append(frame_info(f'{group}-{i}',(j*256,0,(j+1)*256,256),'sample'))
+    return samples,entries
+
 def main():
     OUT.mkdir(exist_ok=True,parents=True);layout={'version':1,'atlases':{}}
-    specs=[('foods','fast-food-v1.png',4,3,'food'),('people','customers-v1.png',3,2,'customer'),('controls','controls-v2.png',3,2,'control'),('icons','icons-v3.png',3,3,'icon'),('props','props-v3.png',2,2,'prop'),('panels','panels-v3.png',3,2,'panel')]
+    specs=[('foods','fast-food-v1.png',4,3,'food'),('people','customers-v1.png',3,2,'customer'),('controls','controls-v2.png',3,2,'control'),('icons','icons-v3.png',3,3,'icon'),('walls','walls-v1.png',2,2,'material'),('counters','counters-v1.png',2,2,'material'),('nameplates','nameplates-v1.png',2,2,'panel'),('binzone','bin-zone-v1.png',1,1,'panel'),('panels','panels-v3.png',3,2,'panel')]
     for key,file,cols,rows,kind in specs:
         im=Image.open(SRC/file).convert('RGBA');boxes=food_boxes(im,cols*rows) if key=='foods' else [box_for(im,r) for r in regions(im,cols,rows)]
         names=['cream','wood','card','bubble','track','fill'] if key=='panels' else list(range(len(boxes)))
@@ -91,15 +101,18 @@ def main():
         if key=='panels':
             for name,border in [('cream',90),('wood',105),('card',90)]:ins[name]=dict(left=border,right=border,top=border,bottom=border)
             ins['track']=dict(left=70,right=70,top=60,bottom=60);ins['fill']=dict(left=65,right=65,top=56,bottom=56)
+        if key=='nameplates':
+            for name in ['0','1','2','3']:ins[name]=dict(left=80,right=80,top=50,bottom=50)
         if key=='controls':
             for name in ['green','gold']:ins[name]=dict(left=140,right=140,top=125,bottom=125)
         info=make_atlas(key,im,entries,{'green':'3','gold':'4'} if key=='controls' else None,ins);info['source']=f'art-source/{file}';layout['atlases'][key]=info
         if key=='icons':
             first=entries[0];crop=im.crop(first['box']);v=max(crop.size)+24;coin=Image.new('RGBA',(v,v));coin.paste(crop,((v-crop.width)//2,(v-crop.height)//2));coin.save(OUT/'loading-coin.png',optimize=True)
         print(key,len(entries),'frames',info['size'])
-    # Material sample frames get isolated guards too, rather than sampling a shared opaque image.
-    wall=Image.open(OUT/'shop-v1.png').convert('RGBA').crop((40,300,440,700));wood=Image.open(OUT/'wood-v2.png').convert('RGBA').crop((200,250,700,750));samples=Image.new('RGBA',(900,500));samples.paste(wall,(0,0));samples.paste(wood,(400,0))
-    info=make_atlas('swatches',samples,[frame_info('wall',(0,0,400,400),'sample'),frame_info('counter',(400,0,900,500),'sample')]);info['source']='material samples';layout['atlases']['swatches']=info
+    samples,entries=build_samples()
+    info=make_atlas('swatches',samples,entries);info['source']='material samples';layout['atlases']['swatches']=info
+    counters=Image.open(SRC/'counters-v1.png').convert('RGBA');counters.crop(regions(counters,2,2)[0]).save(OUT/'loading-counter.png',optimize=True)
+    board=Image.open(OUT/'board-v2.png').convert('RGBA');layout['boardFrame']=list(box_for(board,(0,0,*board.size)))
     (ROOT/'src/slice-layout.json').write_text(json.dumps(layout,indent=2)+'\n')
 
 if __name__=='__main__':main()
