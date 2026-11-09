@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import {Kitchen,DECORATIONS,type DecorationCategory} from './model';
 import './style.css';
+import sliceLayout from './slice-layout.json';
+type Insets={left:number;right:number;top:number;bottom:number};
+const SLICES=sliceLayout as {atlases:Record<string,{image:string;data:string;insets?:Record<string,Insets>}>};
 
 // UI coordinates stay logical; canvas and text backing stores render at device density.
 const DENSITY=Math.min(3,Math.max(2,Math.ceil(window.devicePixelRatio||1)));
@@ -20,22 +23,11 @@ class Shop extends Phaser.Scene{
  message='';notice:''|'item'|'shop'|'finished'='';noticeUntil=0;panel=false;decorTab:DecorationCategory='wall';
  soundOn=true;audio?:AudioContext;lastSave=0;review=false;
  preload(){
-  this.load.spritesheet('foods','art/food-v1.png',{frameWidth:256,frameHeight:256});
-  this.load.spritesheet('people','art/customers-v1.png',{frameWidth:512,frameHeight:512});
-  this.load.spritesheet('controls','art/controls-v2.png',{frameWidth:512,frameHeight:512});
-  for(const [key,path] of Object.entries({'shop-wall':'shop-v1','board':'board-v2','wood':'wood-v2','panels':'panels-v3','icons':'icons-v3','props':'props-v3'}))this.load.image(key,`art/${path}.png`);
- }
- registerFrames(){
-  this.textures.get('controls').add('green',0,0,620,512,300);
-  this.textures.get('controls').add('gold',0,512,620,512,300);
-  this.textures.get('shop-wall').add('swatch',0,40,300,400,400);this.textures.get('wood').add('swatch',0,200,250,500,500);
-  const panels:Record<Panel,number[]>={cream:[16,112,480,336],wood:[528,108,480,340],card:[1040,112,480,336],bubble:[16,600,480,345],track:[526,697,484,135],fill:[1040,696,480,135]};
-  for(const [key,[x,y,w,h]] of Object.entries(panels))this.textures.get('panels').add(key,0,x,y,w,h);
-  for(const [key,n] of [['icons',3],['props',2]] as const){const t=this.textures.get(key),source=t.getSourceImage() as HTMLImageElement;
-   for(let y=0;y<n;y++)for(let x=0;x<n;x++)t.add(y*n+x,0,Math.round(x*source.width/n),Math.round(y*source.height/n),Math.round((x+1)*source.width/n)-Math.round(x*source.width/n),Math.round((y+1)*source.height/n)-Math.round(y*source.height/n));}
+  for(const [key,atlas] of Object.entries(SLICES.atlases))this.load.atlas(key,atlas.image,atlas.data);
+  for(const [key,path] of Object.entries({'shop-wall':'shop-v1','board':'board-v2','wood':'wood-v2'}))this.load.image(key,`art/${path}.png`);
  }
  create(){
-  this.cameras.main.setZoom(DENSITY).centerOn(240,430);this.registerFrames();
+  this.cameras.main.setZoom(DENSITY).centerOn(240,430);
   try{const saved=localStorage.getItem('merge-serve-v4')??localStorage.getItem('merge-serve-v3')??localStorage.getItem('merge-serve-v2');if(saved)this.k=Kitchen.restore(JSON.parse(saved));this.soundOn=localStorage.getItem('merge-serve-sound')!=='off';}catch{}
   // Review fixtures are stripped from production and never read or write a player's save.
   if(import.meta.env.DEV){const state=new URLSearchParams(location.search).get('review');if(state){this.review=true;this.k=new Kitchen();this.k.coins=900;this.k.owned=DECORATIONS.map(d=>d.id);
@@ -59,19 +51,19 @@ class Shop extends Phaser.Scene{
 
  logical(p:Phaser.Input.Pointer){return this.cameras.main.getWorldPoint(p.x,p.y);}
  frame(type:number,level:number){return this.k.shop*12+type*4+level-1;}
- art(key:string,x:number,y:number,w:number,h:number,frame?:number|string){const image=this.add.image(x,y,key,frame??'__BASE').setDisplaySize(w,h);this.ui.add(image);return image;}
- surface(r:Rect,frame:Panel='cream',scale=.25){
-  // Nine-slicing preserves painted borders on large dialogs and small cards alike.
-  const border=frame==='track'||frame==='fill'?64:84;
-  if(this.game.renderer.type!==Phaser.WEBGL)return this.art('panels',r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);
-  const image=this.add.nineslice(r.x+r.w/2,r.y+r.h/2,'panels',frame,r.w/scale,r.h/scale,border,border,border,border).setScale(scale);this.ui.add(image);return image;
+ art(key:string,x:number,y:number,w:number,h:number,frame?:number|string){const image=this.add.image(x,y,key,frame??'__BASE');if(key==='props')image.setScale(Math.min(w/image.width,h/image.height)).setOrigin(.5,Number(frame)>=2?1:.5);else image.setDisplaySize(w,h).setOrigin(.5);this.ui.add(image);return image;}
+ slicedSurface(key:string,frame:string,r:Rect,requestedScale:number){
+  const c=SLICES.atlases[key].insets?.[frame];
+  if(!c||this.game.renderer.type!==Phaser.WEBGL)return this.art(key,r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);
+  // Clamp cap scale at tiny progress values so neither source nor destination slices invert.
+  const scale=Math.min(requestedScale,r.w/(c.left+c.right),r.h/(c.top+c.bottom));
+  const image=this.add.nineslice(r.x+r.w/2,r.y+r.h/2,key,frame,r.w/scale,r.h/scale,c.left,c.right,c.top,c.bottom).setScale(scale);this.ui.add(image);return image;
  }
+ surface(r:Rect,frame:Panel='cream',scale=.25){return this.slicedSurface('panels',frame,r,scale);}
+
  icon(x:number,y:number,key:keyof typeof ICON,size=32){return this.art('icons',x,y,size,size,ICON[key]);}
  text(x:number,y:number,s:string,size=17,c=ink,width?:number){const t=this.add.text(x,y,s,{fontFamily:FONT,fontSize:size,fontStyle:'normal',color:c,wordWrap:width?{width,useAdvancedWrap:true}:undefined}).setResolution(DENSITY);this.ui.add(t);return t;}
- buttonSurface(r:Rect,active=false){const frame=active?'gold':'green',scale=.16;
-  if(this.game.renderer.type!==Phaser.WEBGL)return this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);
-  const image=this.add.nineslice(r.x+r.w/2,r.y+r.h/2,'controls',frame,r.w/scale,r.h/scale,120,120,96,96).setScale(scale);this.ui.add(image);return image;
- }
+ buttonSurface(r:Rect,active=false){return this.slicedSurface('controls',active?'gold':'green',r,.16);}
  button(r:Rect,label:string,fn:()=>void,active=false,size=17){this.buttonSurface(r,active);this.text(r.x+r.w/2,r.y+r.h/2,label,size).setOrigin(.5);this.hit(r,fn);}
  hit(r:Rect,fn:()=>void){const z=this.add.zone(r.x,r.y,r.w,r.h).setOrigin(0).setInteractive({useHandCursor:true});this.ui.add(z);z.on('pointerup',()=>{if(this.drag<0)fn();});}
  control(r:Rect,frame:number,fn:()=>void){this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);this.hit(r,fn);}
@@ -89,6 +81,15 @@ class Shop extends Phaser.Scene{
  announce(kind:'item'|'shop'|'finished'){this.notice=kind;this.noticeUntil=this.time.now+2600;}
  buy(type:number){if(type>=this.k.unlocked)return;if(!this.k.addItem(type)){this.note('',true);return;}this.tone('buy');this.note('');}
  paint(){this.ui.removeAll(true);const k=this.k;
+  if(import.meta.env.DEV){const page=new URLSearchParams(location.search).get('review');if(page?.startsWith('atlas-')){
+   this.surface({x:0,y:0,w:480,h:860});this.text(240,52,'SLICE REVIEW',28).setOrigin(.5);
+   const group=page==='atlas-icons'?'icons':page==='atlas-controls'?'controls':page==='atlas-people'?'people':page==='atlas-props'?'props':'foods';
+   const offset=page==='atlas-foods-2'?12:0,total=group==='foods'?12:group==='icons'?9:group==='props'?4:6,cols=group==='people'||group==='props'?2:4;
+   for(let i=0;i<total;i++){const x=cols===2?130+i%2*220:70+i%4*112,y=165+Math.floor(i/cols)*(cols===2?210:185),size=cols===2?155:96;
+    this.surface({x:x-size/2-3,y:y-size/2-8,w:size+6,h:size+35},i%2?'card':'cream');
+    this.art(group,x,y,size,size,i+offset).setOrigin(.5);this.text(x,y+size/2+14,`${group} ${i+offset}`,13).setOrigin(.5);
+   }return;
+  }}
   this.surface({x:0,y:0,w:480,h:85});this.shopScene();
   const sound={x:8,y:8,w:62,h:62};if(this.soundOn)this.control(sound,0,()=>this.toggleSound());else{this.icon(39,39,'mute',62);this.hit(sound,()=>this.toggleSound());}
   const m=k.milestone;this.surface({x:82,y:17,w:208,h:43},'track');
@@ -116,15 +117,15 @@ class Shop extends Phaser.Scene{
    if(customer.paid)this.icon(cx,195,'check',46);else customer.items.forEach((item,j)=>{const x=r.x+(cw-total)/2+j*iw+iw/2,icon=this.food(x,195,item.type,item.level,Math.min(72,iw));if(item.done){icon.setAlpha(.25);this.icon(x,195,'check',30);}});
    this.hit(r,()=>{if(!this.panel)this.deliver(this.selected,i);});});
   const counter=this.art('wood',240,602,480,516);if(k.decoration('counter').id!=='counter-classic')counter.setTint(k.decoration('counter').color);
-  const prop=props[k.equipped.counterProp];if(prop!==undefined)this.art('props',448,316,76,76,prop);
+  const prop=props[k.equipped.counterProp];if(prop!==undefined)this.art('props',448,350,76,76,prop);
  }
  completionPanel(){const k=this.k;this.surface({x:28,y:145,w:424,h:188},'wood');this.icon(85,201,k.shopReady?'shop':'trophy',72);this.text(262,182,k.shopReady?'SHOP 2 UNLOCKED':'BOTH SHOPS MASTERED',20).setOrigin(.5);
   this.text(141,211,k.shopReady?'Coins and decorations carry over.':'All orders complete. Progress saved.',14,ink,280);
   if(k.shopReady)this.button({x:110,y:266,w:260,h:45},'OPEN NEXT SHOP',()=>{k.openShop();this.selected=-1;this.note('');},true,17);else this.icon(240,281,'sparkle',54);
  }
  decorationPreview(id:string,x:number,y:number,size:number){const d=DECORATIONS.find(d=>d.id===id)!;
-  if(d.category==='wall'||d.category==='counter'){this.surface({x:x-size/2,y:y-size/2,w:size,h:size},'wood',.12);const image=this.art(d.category==='wall'?'shop-wall':'wood',x,y,size-22,size-22,'swatch');if(d.id!=='wall-classic'&&d.id!=='counter-classic')image.setTint(d.color);}
-  else if(props[id]!==undefined)this.art('props',x,y,size,size,props[id]);else this.icon(x,y,'empty',size);
+  if(d.category==='wall'||d.category==='counter'){this.surface({x:x-size/2,y:y-size/2,w:size,h:size},'wood',.12);const image=this.art('swatches',x,y,size-22,size-22,d.category==='wall'?'wall':'counter');if(d.id!=='wall-classic'&&d.id!=='counter-classic')image.setTint(d.color);}
+  else if(props[id]!==undefined)this.art('props',x,y,size,size,props[id]).setOrigin(.5);else this.icon(x,y,'empty',size);
  }
  decorationPanel(){const k=this.k;
   this.surface({x:0,y:0,w:480,h:860},'card').setTint(0x224e42).setAlpha(.72);const shield=this.add.zone(0,0,480,860).setOrigin(0).setInteractive();this.ui.add(shield);

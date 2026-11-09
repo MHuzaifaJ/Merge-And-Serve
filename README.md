@@ -40,3 +40,9 @@ All visible surfaces and icons use the approved PNG art direction: speech bubble
 Development-only visual review: append `?review=three`, `decor-wall`, `decor-counter`, `decor-wallProp`, `decor-counterProp`, `shop2`, `shopReady`, `finished`, `unlock` or `muted`. Review fixtures do not save, and Vite strips their setup from production builds.
 
 Order bubbles display icons/checks only, without payment numbers. Payout rules remain unchanged. Progress pills and green/gold controls preserve painted caps/borders with nine-slicing; material previews use framed detail swatches. All UI text uses the locally bundled Lilita One font (SIL OFL license included in public/fonts/OFL.txt).
+
+## Production slicing
+
+Original atlas artwork is preserved in art-source/. Players load generated PNG/JSON atlases from public/art/sliced-*. The pipeline finds actual food silhouettes (the source rows are not uniform), trims alpha bounds with 3px antialias allowance, aligns portrait baselines, records pivots and virtual sizes, and adds 4px edge extrusion plus 4px transparent gutters. UI cap insets are per-frame and clamped at small render sizes. Props fit their boxes without aspect distortion; in-world counter props use a bottom pivot while menu previews use a center pivot.
+
+To regenerate: install scripts/requirements-art.txt with Python, run `python scripts/slice_assets.py`, then `python scripts/verify_slices.py` (or pnpm test:assets). The verifier checks 57 unique frames plus 2 shared button aliases, exact copied pixels, coverage of source alpha >=32, trim/virtual bounds, pivots, transparent gutters, extruded texels and nine-slice geometry. Independent board/shop/counter textures are also checked. Dev atlas galleries: `?review=atlas-foods-1`, `atlas-foods-2`, `atlas-icons`, `atlas-controls`, `atlas-people`, `atlas-props`; fixtures are removed from production and never save.

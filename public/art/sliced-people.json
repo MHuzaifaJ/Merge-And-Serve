@@ -1,0 +1,161 @@
+{
+  "frames": {
+    "0": {
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "w": 416,
+        "h": 468
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 48,
+        "y": 28,
+        "w": 416,
+        "h": 468
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "1": {
+      "frame": {
+        "x": 440,
+        "y": 8,
+        "w": 373,
+        "h": 474
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 69,
+        "y": 22,
+        "w": 373,
+        "h": 474
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "2": {
+      "frame": {
+        "x": 8,
+        "y": 498,
+        "w": 430,
+        "h": 455
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 41,
+        "y": 41,
+        "w": 430,
+        "h": 455
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "3": {
+      "frame": {
+        "x": 454,
+        "y": 498,
+        "w": 403,
+        "h": 487
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 54,
+        "y": 9,
+        "w": 403,
+        "h": 487
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "4": {
+      "frame": {
+        "x": 8,
+        "y": 1001,
+        "w": 430,
+        "h": 475
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 41,
+        "y": 21,
+        "w": 430,
+        "h": 475
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "5": {
+      "frame": {
+        "x": 454,
+        "y": 1001,
+        "w": 380,
+        "h": 475
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 66,
+        "y": 21,
+        "w": 380,
+        "h": 475
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "Merge & Serve lossless slicer",
+    "version": "1",
+    "image": "sliced-people.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1024,
+      "h": 1504
+    },
+    "scale": "1",
+    "padding": 4,
+    "extrude": 4
+  }
+}

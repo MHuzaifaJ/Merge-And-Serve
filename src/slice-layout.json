@@ -1,0 +1,1867 @@
+{
+  "version": 1,
+  "atlases": {
+    "foods": {
+      "image": "art/sliced-foods.png",
+      "data": "art/sliced-foods.json",
+      "size": [
+        1024,
+        1472
+      ],
+      "frames": [
+        {
+          "name": "0",
+          "sourceRect": [
+            39,
+            71,
+            235,
+            230
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 8,
+            "y": 8,
+            "w": 196,
+            "h": 159
+          },
+          "sourceSize": {
+            "w": 228,
+            "h": 228
+          },
+          "spriteSourceSize": {
+            "x": 16,
+            "y": 34,
+            "w": 196,
+            "h": 159
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "1",
+          "sourceRect": [
+            292,
+            50,
+            476,
+            240
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 220,
+            "y": 8,
+            "w": 184,
+            "h": 190
+          },
+          "sourceSize": {
+            "w": 221,
+            "h": 221
+          },
+          "spriteSourceSize": {
+            "x": 18,
+            "y": 15,
+            "w": 184,
+            "h": 190
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "2",
+          "sourceRect": [
+            528,
+            45,
+            738,
+            239
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 420,
+            "y": 8,
+            "w": 210,
+            "h": 194
+          },
+          "sourceSize": {
+            "w": 245,
+            "h": 245
+          },
+          "spriteSourceSize": {
+            "x": 17,
+            "y": 25,
+            "w": 210,
+            "h": 194
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "3",
+          "sourceRect": [
+            768,
+            64,
+            999,
+            230
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 646,
+            "y": 8,
+            "w": 231,
+            "h": 166
+          },
+          "sourceSize": {
+            "w": 269,
+            "h": 269
+          },
+          "spriteSourceSize": {
+            "x": 19,
+            "y": 51,
+            "w": 231,
+            "h": 166
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "4",
+          "sourceRect": [
+            25,
+            331,
+            238,
+            474
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 8,
+            "y": 218,
+            "w": 213,
+            "h": 143
+          },
+          "sourceSize": {
+            "w": 248,
+            "h": 248
+          },
+          "spriteSourceSize": {
+            "x": 17,
+            "y": 52,
+            "w": 213,
+            "h": 143
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "5",
+          "sourceRect": [
+            286,
+            317,
+            481,
+            494
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 237,
+            "y": 218,
+            "w": 195,
+            "h": 177
+          },
+          "sourceSize": {
+            "w": 227,
+            "h": 227
+          },
+          "spriteSourceSize": {
+            "x": 16,
+            "y": 25,
+            "w": 195,
+            "h": 177
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "6",
+          "sourceRect": [
+            526,
+            303,
+            740,
+            501
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 448,
+            "y": 218,
+            "w": 214,
+            "h": 198
+          },
+          "sourceSize": {
+            "w": 249,
+            "h": 249
+          },
+          "spriteSourceSize": {
+            "x": 17,
+            "y": 25,
+            "w": 214,
+            "h": 198
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "7",
+          "sourceRect": [
+            777,
+            264,
+            999,
+            507
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 678,
+            "y": 218,
+            "w": 222,
+            "h": 243
+          },
+          "sourceSize": {
+            "w": 283,
+            "h": 283
+          },
+          "spriteSourceSize": {
+            "x": 30,
+            "y": 20,
+            "w": 222,
+            "h": 243
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "8",
+          "sourceRect": [
+            47,
+            573,
+            218,
+            765
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 8,
+            "y": 477,
+            "w": 171,
+            "h": 192
+          },
+          "sourceSize": {
+            "w": 224,
+            "h": 224
+          },
+          "spriteSourceSize": {
+            "x": 26,
+            "y": 16,
+            "w": 171,
+            "h": 192
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "9",
+          "sourceRect": [
+            302,
+            524,
+            469,
+            767
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 195,
+            "y": 477,
+            "w": 167,
+            "h": 243
+          },
+          "sourceSize": {
+            "w": 283,
+            "h": 283
+          },
+          "spriteSourceSize": {
+            "x": 58,
+            "y": 20,
+            "w": 167,
+            "h": 243
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "10",
+          "sourceRect": [
+            549,
+            527,
+            718,
+            769
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 378,
+            "y": 477,
+            "w": 169,
+            "h": 242
+          },
+          "sourceSize": {
+            "w": 282,
+            "h": 282
+          },
+          "spriteSourceSize": {
+            "x": 56,
+            "y": 20,
+            "w": 169,
+            "h": 242
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "11",
+          "sourceRect": [
+            805,
+            527,
+            975,
+            772
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 563,
+            "y": 477,
+            "w": 170,
+            "h": 245
+          },
+          "sourceSize": {
+            "w": 285,
+            "h": 285
+          },
+          "spriteSourceSize": {
+            "x": 57,
+            "y": 20,
+            "w": 170,
+            "h": 245
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "12",
+          "sourceRect": [
+            37,
+            828,
+            227,
+            982
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 749,
+            "y": 477,
+            "w": 190,
+            "h": 154
+          },
+          "sourceSize": {
+            "w": 221,
+            "h": 221
+          },
+          "spriteSourceSize": {
+            "x": 15,
+            "y": 33,
+            "w": 190,
+            "h": 154
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "13",
+          "sourceRect": [
+            285,
+            816,
+            481,
+            981
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 8,
+            "y": 738,
+            "w": 196,
+            "h": 165
+          },
+          "sourceSize": {
+            "w": 228,
+            "h": 228
+          },
+          "spriteSourceSize": {
+            "x": 16,
+            "y": 31,
+            "w": 196,
+            "h": 165
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "14",
+          "sourceRect": [
+            536,
+            812,
+            728,
+            987
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 220,
+            "y": 738,
+            "w": 192,
+            "h": 175
+          },
+          "sourceSize": {
+            "w": 224,
+            "h": 224
+          },
+          "spriteSourceSize": {
+            "x": 16,
+            "y": 24,
+            "w": 192,
+            "h": 175
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "15",
+          "sourceRect": [
+            763,
+            809,
+            1006,
+            992
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 428,
+            "y": 738,
+            "w": 243,
+            "h": 183
+          },
+          "sourceSize": {
+            "w": 283,
+            "h": 283
+          },
+          "spriteSourceSize": {
+            "x": 20,
+            "y": 50,
+            "w": 243,
+            "h": 183
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "16",
+          "sourceRect": [
+            37,
+            1072,
+            225,
+            1224
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 687,
+            "y": 738,
+            "w": 188,
+            "h": 152
+          },
+          "sourceSize": {
+            "w": 219,
+            "h": 219
+          },
+          "spriteSourceSize": {
+            "x": 15,
+            "y": 33,
+            "w": 188,
+            "h": 152
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "17",
+          "sourceRect": [
+            288,
+            1015,
+            480,
+            1228
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 8,
+            "y": 937,
+            "w": 192,
+            "h": 213
+          },
+          "sourceSize": {
+            "w": 248,
+            "h": 248
+          },
+          "spriteSourceSize": {
+            "x": 28,
+            "y": 17,
+            "w": 192,
+            "h": 213
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "18",
+          "sourceRect": [
+            537,
+            1014,
+            727,
+            1228
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 216,
+            "y": 937,
+            "w": 190,
+            "h": 214
+          },
+          "sourceSize": {
+            "w": 249,
+            "h": 249
+          },
+          "spriteSourceSize": {
+            "x": 29,
+            "y": 17,
+            "w": 190,
+            "h": 214
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "19",
+          "sourceRect": [
+            771,
+            1007,
+            999,
+            1232
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 422,
+            "y": 937,
+            "w": 228,
+            "h": 225
+          },
+          "sourceSize": {
+            "w": 266,
+            "h": 266
+          },
+          "spriteSourceSize": {
+            "x": 19,
+            "y": 20,
+            "w": 228,
+            "h": 225
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "20",
+          "sourceRect": [
+            56,
+            1311,
+            206,
+            1509
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 666,
+            "y": 937,
+            "w": 150,
+            "h": 198
+          },
+          "sourceSize": {
+            "w": 231,
+            "h": 231
+          },
+          "spriteSourceSize": {
+            "x": 40,
+            "y": 16,
+            "w": 150,
+            "h": 198
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "21",
+          "sourceRect": [
+            299,
+            1279,
+            465,
+            1509
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 832,
+            "y": 937,
+            "w": 166,
+            "h": 230
+          },
+          "sourceSize": {
+            "w": 268,
+            "h": 268
+          },
+          "spriteSourceSize": {
+            "x": 51,
+            "y": 19,
+            "w": 166,
+            "h": 230
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "22",
+          "sourceRect": [
+            548,
+            1262,
+            714,
+            1510
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 8,
+            "y": 1183,
+            "w": 166,
+            "h": 248
+          },
+          "sourceSize": {
+            "w": 289,
+            "h": 289
+          },
+          "spriteSourceSize": {
+            "x": 61,
+            "y": 20,
+            "w": 166,
+            "h": 248
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "23",
+          "sourceRect": [
+            786,
+            1242,
+            981,
+            1516
+          ],
+          "kind": "food",
+          "frame": {
+            "x": 190,
+            "y": 1183,
+            "w": 195,
+            "h": 274
+          },
+          "sourceSize": {
+            "w": 319,
+            "h": 319
+          },
+          "spriteSourceSize": {
+            "x": 62,
+            "y": 22,
+            "w": 195,
+            "h": 274
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ],
+      "aliases": {},
+      "insets": {},
+      "padding": 4,
+      "extrude": 4,
+      "source": "art-source/food-v1.png"
+    },
+    "people": {
+      "image": "art/sliced-people.png",
+      "data": "art/sliced-people.json",
+      "size": [
+        1024,
+        1504
+      ],
+      "frames": [
+        {
+          "name": "0",
+          "sourceRect": [
+            63,
+            17,
+            479,
+            485
+          ],
+          "kind": "customer",
+          "frame": {
+            "x": 8,
+            "y": 8,
+            "w": 416,
+            "h": 468
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 48,
+            "y": 28,
+            "w": 416,
+            "h": 468
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "1",
+          "sourceRect": [
+            585,
+            10,
+            958,
+            484
+          ],
+          "kind": "customer",
+          "frame": {
+            "x": 440,
+            "y": 8,
+            "w": 373,
+            "h": 474
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 69,
+            "y": 22,
+            "w": 373,
+            "h": 474
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "2",
+          "sourceRect": [
+            1060,
+            29,
+            1490,
+            484
+          ],
+          "kind": "customer",
+          "frame": {
+            "x": 8,
+            "y": 498,
+            "w": 430,
+            "h": 455
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 41,
+            "y": 41,
+            "w": 430,
+            "h": 455
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "3",
+          "sourceRect": [
+            74,
+            518,
+            477,
+            1005
+          ],
+          "kind": "customer",
+          "frame": {
+            "x": 454,
+            "y": 498,
+            "w": 403,
+            "h": 487
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 54,
+            "y": 9,
+            "w": 403,
+            "h": 487
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "4",
+          "sourceRect": [
+            556,
+            529,
+            986,
+            1004
+          ],
+          "kind": "customer",
+          "frame": {
+            "x": 8,
+            "y": 1001,
+            "w": 430,
+            "h": 475
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 41,
+            "y": 21,
+            "w": 430,
+            "h": 475
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "5",
+          "sourceRect": [
+            1083,
+            529,
+            1463,
+            1004
+          ],
+          "kind": "customer",
+          "frame": {
+            "x": 454,
+            "y": 1001,
+            "w": 380,
+            "h": 475
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 66,
+            "y": 21,
+            "w": 380,
+            "h": 475
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ],
+      "aliases": {},
+      "insets": {},
+      "padding": 4,
+      "extrude": 4,
+      "source": "art-source/customers-v1.png"
+    },
+    "controls": {
+      "image": "art/sliced-controls.png",
+      "data": "art/sliced-controls.json",
+      "size": [
+        1024,
+        1344
+      ],
+      "frames": [
+        {
+          "name": "0",
+          "sourceRect": [
+            44,
+            47,
+            468,
+            481
+          ],
+          "kind": "control",
+          "frame": {
+            "x": 8,
+            "y": 8,
+            "w": 424,
+            "h": 434
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 44,
+            "y": 39,
+            "w": 424,
+            "h": 434
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "1",
+          "sourceRect": [
+            556,
+            47,
+            980,
+            481
+          ],
+          "kind": "control",
+          "frame": {
+            "x": 448,
+            "y": 8,
+            "w": 424,
+            "h": 434
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 44,
+            "y": 39,
+            "w": 424,
+            "h": 434
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "2",
+          "sourceRect": [
+            1068,
+            47,
+            1492,
+            481
+          ],
+          "kind": "control",
+          "frame": {
+            "x": 8,
+            "y": 458,
+            "w": 424,
+            "h": 434
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 44,
+            "y": 39,
+            "w": 424,
+            "h": 434
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "3",
+          "sourceRect": [
+            7,
+            625,
+            505,
+            913
+          ],
+          "kind": "control",
+          "frame": {
+            "x": 448,
+            "y": 458,
+            "w": 498,
+            "h": 288
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 7,
+            "y": 112,
+            "w": 498,
+            "h": 288
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "4",
+          "sourceRect": [
+            519,
+            625,
+            1017,
+            913
+          ],
+          "kind": "control",
+          "frame": {
+            "x": 8,
+            "y": 908,
+            "w": 498,
+            "h": 288
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 7,
+            "y": 112,
+            "w": 498,
+            "h": 288
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "5",
+          "sourceRect": [
+            1105,
+            556,
+            1453,
+            962
+          ],
+          "kind": "control",
+          "frame": {
+            "x": 522,
+            "y": 908,
+            "w": 348,
+            "h": 406
+          },
+          "sourceSize": {
+            "w": 512,
+            "h": 512
+          },
+          "spriteSourceSize": {
+            "x": 82,
+            "y": 53,
+            "w": 348,
+            "h": 406
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ],
+      "aliases": {
+        "green": "3",
+        "gold": "4"
+      },
+      "insets": {
+        "green": {
+          "left": 140,
+          "right": 140,
+          "top": 125,
+          "bottom": 125
+        },
+        "gold": {
+          "left": 140,
+          "right": 140,
+          "top": 125,
+          "bottom": 125
+        }
+      },
+      "padding": 4,
+      "extrude": 4,
+      "source": "art-source/controls-v2.png"
+    },
+    "icons": {
+      "image": "art/sliced-icons.png",
+      "data": "art/sliced-icons.json",
+      "size": [
+        1024,
+        1408
+      ],
+      "frames": [
+        {
+          "name": "0",
+          "sourceRect": [
+            67,
+            71,
+            387,
+            395
+          ],
+          "kind": "icon",
+          "frame": {
+            "x": 8,
+            "y": 8,
+            "w": 320,
+            "h": 324
+          },
+          "sourceSize": {
+            "w": 386,
+            "h": 386
+          },
+          "spriteSourceSize": {
+            "x": 33,
+            "y": 31,
+            "w": 320,
+            "h": 324
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "1",
+          "sourceRect": [
+            463,
+            87,
+            785,
+            372
+          ],
+          "kind": "icon",
+          "frame": {
+            "x": 344,
+            "y": 8,
+            "w": 322,
+            "h": 285
+          },
+          "sourceSize": {
+            "w": 384,
+            "h": 384
+          },
+          "spriteSourceSize": {
+            "x": 31,
+            "y": 49,
+            "w": 322,
+            "h": 285
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "2",
+          "sourceRect": [
+            864,
+            66,
+            1186,
+            394
+          ],
+          "kind": "icon",
+          "frame": {
+            "x": 682,
+            "y": 8,
+            "w": 322,
+            "h": 328
+          },
+          "sourceSize": {
+            "w": 391,
+            "h": 391
+          },
+          "spriteSourceSize": {
+            "x": 34,
+            "y": 31,
+            "w": 322,
+            "h": 328
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "3",
+          "sourceRect": [
+            66,
+            465,
+            387,
+            793
+          ],
+          "kind": "icon",
+          "frame": {
+            "x": 8,
+            "y": 352,
+            "w": 321,
+            "h": 328
+          },
+          "sourceSize": {
+            "w": 391,
+            "h": 391
+          },
+          "spriteSourceSize": {
+            "x": 35,
+            "y": 31,
+            "w": 321,
+            "h": 328
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "4",
+          "sourceRect": [
+            486,
+            457,
+            761,
+            788
+          ],
+          "kind": "icon",
+          "frame": {
+            "x": 345,
+            "y": 352,
+            "w": 275,
+            "h": 331
+          },
+          "sourceSize": {
+            "w": 395,
+            "h": 395
+          },
+          "spriteSourceSize": {
+            "x": 60,
+            "y": 32,
+            "w": 275,
+            "h": 331
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "5",
+          "sourceRect": [
+            845,
+            470,
+            1203,
+            783
+          ],
+          "kind": "icon",
+          "frame": {
+            "x": 636,
+            "y": 352,
+            "w": 358,
+            "h": 313
+          },
+          "sourceSize": {
+            "w": 427,
+            "h": 427
+          },
+          "spriteSourceSize": {
+            "x": 34,
+            "y": 57,
+            "w": 358,
+            "h": 313
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "6",
+          "sourceRect": [
+            49,
+            867,
+            402,
+            1192
+          ],
+          "kind": "icon",
+          "frame": {
+            "x": 8,
+            "y": 699,
+            "w": 353,
+            "h": 325
+          },
+          "sourceSize": {
+            "w": 421,
+            "h": 421
+          },
+          "spriteSourceSize": {
+            "x": 34,
+            "y": 48,
+            "w": 353,
+            "h": 325
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "7",
+          "sourceRect": [
+            463,
+            877,
+            758,
+            1164
+          ],
+          "kind": "icon",
+          "frame": {
+            "x": 377,
+            "y": 699,
+            "w": 295,
+            "h": 287
+          },
+          "sourceSize": {
+            "w": 352,
+            "h": 352
+          },
+          "spriteSourceSize": {
+            "x": 28,
+            "y": 32,
+            "w": 295,
+            "h": 287
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "8",
+          "sourceRect": [
+            855,
+            860,
+            1190,
+            1201
+          ],
+          "kind": "icon",
+          "frame": {
+            "x": 8,
+            "y": 1040,
+            "w": 335,
+            "h": 341
+          },
+          "sourceSize": {
+            "w": 406,
+            "h": 406
+          },
+          "spriteSourceSize": {
+            "x": 35,
+            "y": 32,
+            "w": 335,
+            "h": 341
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ],
+      "aliases": {},
+      "insets": {},
+      "padding": 4,
+      "extrude": 4,
+      "source": "art-source/icons-v3.png"
+    },
+    "props": {
+      "image": "art/sliced-props.png",
+      "data": "art/sliced-props.json",
+      "size": [
+        1024,
+        1152
+      ],
+      "frames": [
+        {
+          "name": "0",
+          "sourceRect": [
+            59,
+            46,
+            568,
+            590
+          ],
+          "kind": "prop",
+          "frame": {
+            "x": 8,
+            "y": 8,
+            "w": 509,
+            "h": 544
+          },
+          "sourceSize": {
+            "w": 541,
+            "h": 576
+          },
+          "spriteSourceSize": {
+            "x": 16,
+            "y": 16,
+            "w": 509,
+            "h": 544
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "1",
+          "sourceRect": [
+            768,
+            25,
+            1113,
+            566
+          ],
+          "kind": "prop",
+          "frame": {
+            "x": 533,
+            "y": 8,
+            "w": 345,
+            "h": 541
+          },
+          "sourceSize": {
+            "w": 377,
+            "h": 573
+          },
+          "spriteSourceSize": {
+            "x": 16,
+            "y": 16,
+            "w": 345,
+            "h": 541
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "2",
+          "sourceRect": [
+            77,
+            656,
+            559,
+            1223
+          ],
+          "kind": "prop",
+          "frame": {
+            "x": 8,
+            "y": 568,
+            "w": 482,
+            "h": 567
+          },
+          "sourceSize": {
+            "w": 514,
+            "h": 599
+          },
+          "spriteSourceSize": {
+            "x": 16,
+            "y": 16,
+            "w": 482,
+            "h": 567
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 1
+          }
+        },
+        {
+          "name": "3",
+          "sourceRect": [
+            669,
+            657,
+            1177,
+            1227
+          ],
+          "kind": "prop",
+          "frame": {
+            "x": 506,
+            "y": 568,
+            "w": 508,
+            "h": 570
+          },
+          "sourceSize": {
+            "w": 540,
+            "h": 602
+          },
+          "spriteSourceSize": {
+            "x": 16,
+            "y": 16,
+            "w": 508,
+            "h": 570
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 1
+          }
+        }
+      ],
+      "aliases": {},
+      "insets": {},
+      "padding": 4,
+      "extrude": 4,
+      "source": "art-source/props-v3.png"
+    },
+    "panels": {
+      "image": "art/sliced-panels.png",
+      "data": "art/sliced-panels.json",
+      "size": [
+        1536,
+        736
+      ],
+      "frames": [
+        {
+          "name": "cream",
+          "sourceRect": [
+            18,
+            119,
+            495,
+            444
+          ],
+          "kind": "panel",
+          "frame": {
+            "x": 8,
+            "y": 8,
+            "w": 477,
+            "h": 325
+          },
+          "sourceSize": {
+            "w": 477,
+            "h": 325
+          },
+          "spriteSourceSize": {
+            "x": 0,
+            "y": 0,
+            "w": 477,
+            "h": 325
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "wood",
+          "sourceRect": [
+            526,
+            113,
+            1010,
+            448
+          ],
+          "kind": "panel",
+          "frame": {
+            "x": 501,
+            "y": 8,
+            "w": 484,
+            "h": 335
+          },
+          "sourceSize": {
+            "w": 484,
+            "h": 335
+          },
+          "spriteSourceSize": {
+            "x": 0,
+            "y": 0,
+            "w": 484,
+            "h": 335
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "card",
+          "sourceRect": [
+            1038,
+            118,
+            1519,
+            444
+          ],
+          "kind": "panel",
+          "frame": {
+            "x": 1001,
+            "y": 8,
+            "w": 481,
+            "h": 326
+          },
+          "sourceSize": {
+            "w": 481,
+            "h": 326
+          },
+          "spriteSourceSize": {
+            "x": 0,
+            "y": 0,
+            "w": 481,
+            "h": 326
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "bubble",
+          "sourceRect": [
+            20,
+            603,
+            492,
+            942
+          ],
+          "kind": "panel",
+          "frame": {
+            "x": 8,
+            "y": 359,
+            "w": 472,
+            "h": 339
+          },
+          "sourceSize": {
+            "w": 472,
+            "h": 339
+          },
+          "spriteSourceSize": {
+            "x": 0,
+            "y": 0,
+            "w": 472,
+            "h": 339
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "track",
+          "sourceRect": [
+            524,
+            696,
+            1011,
+            832
+          ],
+          "kind": "panel",
+          "frame": {
+            "x": 496,
+            "y": 359,
+            "w": 487,
+            "h": 136
+          },
+          "sourceSize": {
+            "w": 487,
+            "h": 136
+          },
+          "spriteSourceSize": {
+            "x": 0,
+            "y": 0,
+            "w": 487,
+            "h": 136
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "fill",
+          "sourceRect": [
+            1039,
+            700,
+            1520,
+            827
+          ],
+          "kind": "panel",
+          "frame": {
+            "x": 999,
+            "y": 359,
+            "w": 481,
+            "h": 127
+          },
+          "sourceSize": {
+            "w": 481,
+            "h": 127
+          },
+          "spriteSourceSize": {
+            "x": 0,
+            "y": 0,
+            "w": 481,
+            "h": 127
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ],
+      "aliases": {},
+      "insets": {
+        "cream": {
+          "left": 90,
+          "right": 90,
+          "top": 90,
+          "bottom": 90
+        },
+        "wood": {
+          "left": 105,
+          "right": 105,
+          "top": 105,
+          "bottom": 105
+        },
+        "card": {
+          "left": 90,
+          "right": 90,
+          "top": 90,
+          "bottom": 90
+        },
+        "track": {
+          "left": 70,
+          "right": 70,
+          "top": 60,
+          "bottom": 60
+        },
+        "fill": {
+          "left": 65,
+          "right": 65,
+          "top": 56,
+          "bottom": 56
+        }
+      },
+      "padding": 4,
+      "extrude": 4,
+      "source": "art-source/panels-v3.png"
+    },
+    "swatches": {
+      "image": "art/sliced-swatches.png",
+      "data": "art/sliced-swatches.json",
+      "size": [
+        1024,
+        544
+      ],
+      "frames": [
+        {
+          "name": "wall",
+          "sourceRect": [
+            0,
+            0,
+            400,
+            400
+          ],
+          "kind": "sample",
+          "frame": {
+            "x": 8,
+            "y": 8,
+            "w": 400,
+            "h": 400
+          },
+          "sourceSize": {
+            "w": 400,
+            "h": 400
+          },
+          "spriteSourceSize": {
+            "x": 0,
+            "y": 0,
+            "w": 400,
+            "h": 400
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "name": "counter",
+          "sourceRect": [
+            400,
+            0,
+            900,
+            500
+          ],
+          "kind": "sample",
+          "frame": {
+            "x": 424,
+            "y": 8,
+            "w": 500,
+            "h": 500
+          },
+          "sourceSize": {
+            "w": 500,
+            "h": 500
+          },
+          "spriteSourceSize": {
+            "x": 0,
+            "y": 0,
+            "w": 500,
+            "h": 500
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ],
+      "aliases": {},
+      "insets": {},
+      "padding": 4,
+      "extrude": 4,
+      "source": "material samples"
+    }
+  }
+}

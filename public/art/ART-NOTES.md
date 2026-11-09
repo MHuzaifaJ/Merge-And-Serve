@@ -39,3 +39,9 @@ Visual QA reviewed: three customers with three-item orders, all four decoration 
 - Lilita One is bundled locally under SIL OFL (public/fonts/OFL.txt) and used for all dynamic UI, headers, shop names, wallet counts and loading text. Phaser waits for it to load before creating text textures; no external font request is made by players.
 
 Browser checks: one/two/three-customer orders without amounts, paid-order check state, rounded 10%/60%/80% progress, framed wall samples, loaded custom font, and a completed order paying +30 into the wallet. Existing model tests protect economy and progression.
+
+## Verified lossless slicing
+
+Original atlas PNGs moved unchanged to art-source/. Runtime uses 7 padded PNG/JSON atlases and a separate isolated loading coin. No art was regenerated or resampled. All 24 food objects use their actual connected silhouette bounds instead of equal-height source rows, fixing clipped smoothie/cookie/cupcake/cake/cone/sundae edges. Trims include a 3px antialias allowance; body coverage is verified for alpha >=32. Food/icon visual sizes are normalized, portrait feet share baseline 496 in a 512px virtual frame, wall props use center pivots, counter props bottom pivots (center override in menu previews). Four duplicated edge texels plus four transparent gutter pixels guard each packed frame. All atlas dimensions stay <=2048; default linear filtering is retained.
+
+57 unique frames and 2 shared button aliases pass pixel, source-coverage, padding/extrusion, pivot, trim-size and nine-slice validation. Per-frame cap insets fix the previous progress-fill insets exceeding the source height. Small destination sizes clamp cap scale instead of inverting slices. Source materials used in thumbnails also have isolated padded frames. Board/shop/counter remain independent full textures, with no shared atlas neighbours. Rebuild scripts and pinned Pillow requirements are in scripts/.

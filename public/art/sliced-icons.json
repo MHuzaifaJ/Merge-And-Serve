@@ -1,0 +1,233 @@
+{
+  "frames": {
+    "0": {
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "w": 320,
+        "h": 324
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 33,
+        "y": 31,
+        "w": 320,
+        "h": 324
+      },
+      "sourceSize": {
+        "w": 386,
+        "h": 386
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "1": {
+      "frame": {
+        "x": 344,
+        "y": 8,
+        "w": 322,
+        "h": 285
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 31,
+        "y": 49,
+        "w": 322,
+        "h": 285
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "2": {
+      "frame": {
+        "x": 682,
+        "y": 8,
+        "w": 322,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 34,
+        "y": 31,
+        "w": 322,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 391,
+        "h": 391
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "3": {
+      "frame": {
+        "x": 8,
+        "y": 352,
+        "w": 321,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 35,
+        "y": 31,
+        "w": 321,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 391,
+        "h": 391
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "4": {
+      "frame": {
+        "x": 345,
+        "y": 352,
+        "w": 275,
+        "h": 331
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 60,
+        "y": 32,
+        "w": 275,
+        "h": 331
+      },
+      "sourceSize": {
+        "w": 395,
+        "h": 395
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "5": {
+      "frame": {
+        "x": 636,
+        "y": 352,
+        "w": 358,
+        "h": 313
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 34,
+        "y": 57,
+        "w": 358,
+        "h": 313
+      },
+      "sourceSize": {
+        "w": 427,
+        "h": 427
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "6": {
+      "frame": {
+        "x": 8,
+        "y": 699,
+        "w": 353,
+        "h": 325
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 34,
+        "y": 48,
+        "w": 353,
+        "h": 325
+      },
+      "sourceSize": {
+        "w": 421,
+        "h": 421
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "7": {
+      "frame": {
+        "x": 377,
+        "y": 699,
+        "w": 295,
+        "h": 287
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 28,
+        "y": 32,
+        "w": 295,
+        "h": 287
+      },
+      "sourceSize": {
+        "w": 352,
+        "h": 352
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "8": {
+      "frame": {
+        "x": 8,
+        "y": 1040,
+        "w": 335,
+        "h": 341
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 35,
+        "y": 32,
+        "w": 335,
+        "h": 341
+      },
+      "sourceSize": {
+        "w": 406,
+        "h": 406
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "Merge & Serve lossless slicer",
+    "version": "1",
+    "image": "sliced-icons.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1024,
+      "h": 1408
+    },
+    "scale": "1",
+    "padding": 4,
+    "extrude": 4
+  }
+}
