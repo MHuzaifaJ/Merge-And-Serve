@@ -22,3 +22,26 @@ test('v4 maps old first-shop board chains and refunds retired props',()=>{const 
 test('v3 board/accessory refunds apply once; v2 retains wallet; dessert board clears',()=>{const p={version:3,coins:200,shop:0,completed:6,board:Array(9).fill(null),owned:['wall-classic','counter-classic','board-classic','board-mint','prop-none','prop-plant'],equipped:{wall:'wall-classic',counter:'counter-classic',board:'board-mint',prop:'prop-plant'}};const r=Kitchen.restore(p);assert.equal(r.coins,440);assert.equal(Kitchen.restore(r.snapshot()).coins,440);assert.equal(Kitchen.restore({...p,version:2}).coins,200);const dessert=Kitchen.restore({...p,version:2,shop:1,board:Array(9).fill({type:0,level:4})});assert.ok(dessert.board.every(r=>r===null));assert.equal(dessert.owned.length,3);});
 
 test('different levels swap and invalid or same-slot moves preserve the board',()=>{const k=new Kitchen(4);const low={type:0,level:1},high={type:0,level:3};k.board[0]=low;k.board[1]=high;assert.equal(k.move(0,1),true);assert.equal(k.board[0],high);assert.equal(k.board[1],low);const board=structuredClone(k.board);for(const [a,b] of [[0,0],[-1,1],[0,9],[2,0]])assert.equal(k.move(a,b),false);assert.deepEqual(k.board,board);assert.equal(k.move(1,2),true);assert.equal(k.board[1],null);assert.equal(k.board[2],low);});
+
+test('new-player tutorial forces the three orders, resumes every step and unlocks after final payment',()=>{
+ let k=Kitchen.newPlayer();
+ assert.deepEqual(k.customers.map(c=>c.items.map(({type,level})=>({type,level}))),[[{type:0,level:1}],[{type:0,level:2}],[{type:0,level:2},{type:1,level:1}]]);
+ const actions=[()=>k.addItem(0),()=>k.deliver(0,0).accepted,()=>k.addItem(0),()=>k.addItem(0),()=>k.move(0,1),()=>k.deliver(1,1).accepted,()=>k.addItem(0),()=>k.addItem(0),()=>k.move(0,1),()=>k.deliver(1,2).accepted,()=>k.addItem(1),()=>k.deliver(0,2).accepted];
+ for(let step=0;step<actions.length;step++){
+  assert.equal(k.tutorialStep,step);
+  const before=structuredClone(k.snapshot());
+  assert.equal(k.addItem(2),false);assert.equal(k.bin(0),false);assert.equal(k.move(0,8),false);assert.equal(k.deliver(0,99).accepted,false);assert.equal(k.purchaseDecoration('wall-rose'),false);
+  assert.deepEqual(k.snapshot(),before);
+  assert.equal(actions[step](),true);
+  if(step===1){assert.equal(k.customers[0].paid,true);assert.equal(k.customers.length,3);assert.equal(k.coins,30);}
+  if(step===9){assert.equal(k.customers[2].items[0].done,true);assert.equal(k.customers[2].items[1].done,false);assert.equal(k.customers[2].paid,false);assert.equal(k.coins,90);}
+  const saved=structuredClone(k.snapshot());k=Kitchen.restore(saved);assert.deepEqual(k.snapshot(),saved);
+ }
+ assert.equal(k.tutorialStep,null);assert.equal(k.groupsCompleted,1);assert.equal(k.coins,180);assert.ok(k.board.every(item=>item===null));assert.equal(k.addItem(2),true);
+});
+test('existing v6 and legacy saves bypass tutorial, and new-player reset returns clean defaults',()=>{
+ const existing=new Kitchen(42);existing.coins=1000;existing.purchaseDecoration('wall-rose');existing.addItem(2);
+ const saved=structuredClone(existing.snapshot());delete saved.tutorialStep;
+ assert.equal(Kitchen.restore(saved).tutorialStep,null);assert.equal(Kitchen.restore({...saved,version:5}).tutorialStep,null);
+ const fresh=Kitchen.newPlayer();assert.equal(fresh.coins,0);assert.equal(fresh.groupsCompleted,0);assert.equal(fresh.tutorialStep,0);assert.equal(fresh.owned.length,3);assert.equal(fresh.equipped.wall,'wall-classic');assert.ok(fresh.board.every(item=>item===null));
+});

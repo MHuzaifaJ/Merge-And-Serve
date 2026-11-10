@@ -17,15 +17,15 @@ class Shop extends Phaser.Scene{
  k=new Kitchen();ui!:Phaser.GameObjects.Container;fx!:Phaser.GameObjects.Container;
  drag=-1;moved=false;origin={x:0,y:0};ghost?:Phaser.GameObjects.Image;
  cells:Rect[]=[];orders:(ServeTarget&{customerIndex:number})[]=[];bin=BIN;binArt?:Phaser.GameObjects.Image;
- message='';panel=false;decorTab:DecorationCategory='wall';
+ message='';panel=false;resetConfirm=false;hintObjects:Phaser.GameObjects.GameObject[]=[];decorTab:DecorationCategory='wall';
  soundOn=true;audio?:AudioContext;lastSave=0;review=false;
  preload(){
   for(const [key,atlas] of Object.entries(SLICES.atlases))this.load.atlas(key,atlas.image,atlas.data);
-  this.load.image('board','art/board-v2.png');
+  this.load.image('board','art/board-v2.png');this.load.svg('tutorial-hand','art/tutorial-hand.svg',{width:128,height:160});
  }
  create(){
   this.cameras.main.setZoom(DENSITY).centerOn(240,430);const [x,y,X,Y]=sliceLayout.boardFrame;this.textures.get('board').add('visible',0,x,y,X-x,Y-y);
-  try{const saved=localStorage.getItem('merge-serve-v6')??localStorage.getItem('merge-serve-v5')??localStorage.getItem('merge-serve-v4')??localStorage.getItem('merge-serve-v3')??localStorage.getItem('merge-serve-v2');if(saved)this.k=Kitchen.restore(JSON.parse(saved));this.soundOn=localStorage.getItem('merge-serve-sound')!=='off';}catch{}
+  try{const saved=localStorage.getItem('merge-serve-v6')??localStorage.getItem('merge-serve-v5')??localStorage.getItem('merge-serve-v4')??localStorage.getItem('merge-serve-v3')??localStorage.getItem('merge-serve-v2');if(saved)this.k=Kitchen.restore(JSON.parse(saved));else this.k=Kitchen.newPlayer();this.soundOn=localStorage.getItem('merge-serve-sound')!=='off';}catch{}
   // Review fixtures are stripped from production and never read or write a player's save.
   if(import.meta.env.DEV){const state=new URLSearchParams(location.search).get('review');if(state){this.review=true;this.k=new Kitchen(42);this.k.coins=900;this.k.owned=DECORATIONS.map(d=>d.id);
    this.k.groupsCompleted=20;this.k.makeOrders();this.k.board=Array.from({length:9},(_,i)=>i<6?{type:i%3,level:1+Math.floor(i/3)}:null);
@@ -38,7 +38,7 @@ class Shop extends Phaser.Scene{
    if(state==='purchase'||state==='poor'){this.k.owned=DECORATIONS.filter(d=>d.price===0).map(d=>d.id);this.k.coins=state==='poor'?0:200;}
   }}
   this.ui=this.add.container(0,0);this.fx=this.add.container(0,0).setDepth(20);
-  this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.panel)return;const i=this.cells.findIndex(r=>inside(p,r));if(i<0||!this.k.board[i])return;this.drag=i;this.origin={x:p.x,y:p.y};this.moved=false;});
+  this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.panel)return;const i=this.cells.findIndex(r=>inside(p,r));const action=this.k.tutorialAction;if(i<0||!this.k.board[i]||action&&(action.kind==='generate'||action.from!==i))return;this.drag=i;this.origin={x:p.x,y:p.y};this.moved=false;});
   this.input.on('pointermove',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.drag<0)return;const started=!this.moved&&Phaser.Math.Distance.Between(p.x,p.y,this.origin.x,this.origin.y)>10;this.moved ||= started;if(started)this.paint();const item=this.k.board[this.drag];if(this.moved&&item){if(!this.ghost)this.ghost=this.add.image(p.x,p.y,'foods',this.frame(item.type,item.level)).setDisplaySize(100,100).setDepth(50);this.ghost.setPosition(p.x,p.y-20);this.binArt?.setTint(inside(p,BIN)?0xffe4a3:0xffffff);}});
   this.input.on('pointerup',(p:Phaser.Input.Pointer)=>this.up(this.logical(p)));this.input.on('pointerupoutside',()=>this.cancel());
   window.addEventListener('blur',()=>{this.cancel();this.save();});window.addEventListener('pagehide',()=>this.save());document.addEventListener('visibilitychange',()=>{if(document.hidden){this.cancel();this.save();}});
@@ -61,7 +61,7 @@ class Shop extends Phaser.Scene{
  text(x:number,y:number,s:string,size=17,c=ink,width?:number){const t=this.add.text(x,y,s,{fontFamily:FONT,fontSize:size,fontStyle:'normal',color:c,wordWrap:width?{width,useAdvancedWrap:true}:undefined}).setResolution(DENSITY);this.ui.add(t);return t;}
  buttonSurface(r:Rect,active=false){return this.slicedSurface('controls',active?'gold':'green',r,.16);}
  button(r:Rect,label:string,fn:()=>void,active=false,size=17){this.buttonSurface(r,active);this.text(r.x+r.w/2,r.y+r.h/2,label,size).setOrigin(.5);this.hit(r,fn);}
- hit(r:Rect,fn:()=>void){const z=this.add.zone(r.x,r.y,r.w,r.h).setOrigin(0).setInteractive({useHandCursor:true});this.ui.add(z);z.on('pointerup',()=>{if(this.drag<0)fn();});}
+ hit(r:Rect,fn:()=>void,tutorialAllowed=false){const z=this.add.zone(r.x,r.y,r.w,r.h).setOrigin(0).setInteractive({useHandCursor:true});this.ui.add(z);z.on('pointerup',()=>{if(this.drag<0&&(!this.k.tutorialAction||tutorialAllowed))fn();});}
  control(r:Rect,frame:number,fn:()=>void){this.art('controls',r.x+r.w/2,r.y+r.h/2,r.w,r.h,frame);this.hit(r,fn);}
  food(x:number,y:number,type:number,level:number,size:number){return this.art('foods',x,y,size,size,this.frame(type,level));}
  price(x:number,y:number,amount:number,size=20){this.icon(x-24,y,'coin',size+12);this.text(x-6,y,amount.toLocaleString(),size).setOrigin(0,.5);}
@@ -75,7 +75,7 @@ class Shop extends Phaser.Scene{
  discard(i:number){if(!this.k.bin(i))return;this.tone('bin');this.note('');}
  deliver(i:number,c:number){const result=this.k.deliver(i,c);if(!result.accepted){this.note('',true);return;}this.tone('serve');this.save();this.paint();if(result.payment)this.pop(result.payment,365,90);}
  buy(type:number){if(!this.k.addItem(type)){this.note('',true);return;}this.tone('buy');this.note('');}
- paint(){this.ui.removeAll(true);const k=this.k;
+ paint(){for(const object of this.hintObjects)this.tweens.killTweensOf(object);this.hintObjects=[];this.ui.removeAll(true);const k=this.k;
   if(import.meta.env.DEV){const page=new URLSearchParams(location.search).get('review');if(page?.startsWith('atlas-')){
    this.surface({x:0,y:0,w:480,h:860});this.text(240,52,'SLICE REVIEW',28).setOrigin(.5);
    const group=page==='atlas-icons'?'icons':page==='atlas-controls'?'controls':page==='atlas-people'?'people':page==='atlas-walls'?'walls':page==='atlas-counters'?'counters':page==='atlas-nameplates'?'nameplates':'foods';
@@ -92,8 +92,9 @@ class Shop extends Phaser.Scene{
   for(let i=0;i<9;i++){const r=boardCell(i);this.cells.push(r);const item=k.board[i];if(item)this.food(r.x+r.w/2,r.y+r.h/2,item.type,item.level,74);}
   this.binArt=this.art('binzone',BIN.x+BIN.w/2,BIN.y+BIN.h/2,BIN.w,BIN.h,0);this.art('controls',BIN.x+BIN.w/2,BIN.y+BIN.h/2,50,50,1);
   this.control({x:76,y:8,w:62,h:62},2,()=>{this.cancel();this.panel=true;this.message='';this.paint();});
-  [0,1,2].forEach(type=>{const r=spawnerRect(type);this.buttonSurface(r,true);this.hit(r,()=>this.buy(type));this.food(r.x+r.w/2,r.y+r.h/2,type,1,buttonIconSize(r));});
+  [0,1,2].forEach(type=>{const r=spawnerRect(type);this.buttonSurface(r,true);this.hit(r,()=>this.buy(type),true);this.food(r.x+r.w/2,r.y+r.h/2,type,1,buttonIconSize(r));});
   if(this.panel)this.decorationPanel();
+  if(this.k.tutorialAction)this.tutorialHint();
  }
  toggleSound(){this.soundOn=!this.soundOn;if(!this.review)try{localStorage.setItem('merge-serve-sound',this.soundOn?'on':'off');}catch{}if(this.soundOn)this.tone('buy');this.paint();}
  shopScene(){const k=this.k;this.art('walls',240,220,480,280,k.decoration('wall').asset);
@@ -123,7 +124,33 @@ class Shop extends Phaser.Scene{
    const r={x:292,y:y+24,w:143,h:40};this.button(r,owned&&!equipped?'Equip':'',()=>{if(equipped)return;const ok=owned?k.equipDecoration(d.id):k.purchaseDecoration(d.id);if(!ok){this.note('Not enough coins. Complete orders to earn more.',true);return;}this.tone('merge');this.note('');},equipped,14);
    if(equipped)this.icon(r.x+r.w/2,y+44,'check',34);else if(!owned)this.price(r.x+r.w/2-1,y+44,d.price,17);
   });
-  if(this.message){this.surface({x:34,y:674,w:412,h:65});this.text(51,687,this.message,14,ink,375);}
+  if(this.message){this.surface({x:34,y:654,w:412,h:45});this.text(51,660,this.message,14,ink,375);}
+  this.button({x:140,y:710,w:200,h:44},'Reset Game',()=>{this.resetConfirm=true;this.paint();},false,18);
+  if(this.resetConfirm){
+   this.surface({x:0,y:0,w:480,h:860},'card').setTint(0x224e42).setAlpha(.8);this.ui.add(this.add.zone(0,0,480,860).setOrigin(0).setInteractive());
+   this.surface({x:40,y:310,w:400,h:230});this.text(240,350,'Reset all progress?',25).setOrigin(.5);
+   this.text(240,397,'Your shop and tutorial will start over.',16).setOrigin(.5);
+   this.button({x:65,y:456,w:160,h:48},'Cancel',()=>{this.resetConfirm=false;this.paint();});
+   this.button({x:255,y:456,w:160,h:48},'Reset',()=>this.resetGame(),true);
+  }
+ }
+ resetGame(){
+  this.cancel();this.fx.removeAll(true);this.panel=false;this.resetConfirm=false;this.message='';this.decorTab='wall';
+  if(!this.review)try{for(const key of ['merge-serve-v2','merge-serve-v3','merge-serve-v4','merge-serve-v5','merge-serve-v6','merge-serve-sound'])localStorage.removeItem(key);}catch{}
+  this.soundOn=true;this.k=Kitchen.newPlayer();this.save();this.paint();
+ }
+ tutorialHint(){const action=this.k.tutorialAction;if(!action)return;
+  const center=(r:Rect)=>({x:r.x+r.w/2,y:r.y+r.h/2});
+  const source=action.kind==='generate'?spawnerRect(action.type):boardCell(action.from);
+  const target=action.kind==='merge'?boardCell(action.to):action.kind==='serve'?customerDialog(3,action.customer):source;
+  for(const r of action.kind==='generate'?[source]:[source,target]){
+   const glow=this.surface({x:r.x-5,y:r.y-5,w:r.w+10,h:r.h+10},'card').setTint(0xffdf63).setAlpha(.4);
+   this.hintObjects.push(glow);this.tweens.add({targets:glow,alpha:.12,duration:650,yoyo:true,repeat:-1});
+  }
+  const start=center(source),end=center(target);if(action.kind==='generate')start.y-=34;
+  const hand=this.art('tutorial-hand',start.x,start.y,54,68).setOrigin(.25,.0625);this.hintObjects.push(hand);
+  if(action.kind==='generate')this.tweens.add({targets:hand,y:start.y+12,scaleX:hand.scaleX*.9,scaleY:hand.scaleY*.9,duration:500,yoyo:true,repeat:-1});
+  else this.tweens.add({targets:hand,x:end.x,y:end.y,duration:1100,hold:250,repeatDelay:450,repeat:-1});
  }
  update(t:number){if(t-this.lastSave>=1000){this.save();this.lastSave=t;}}
 }

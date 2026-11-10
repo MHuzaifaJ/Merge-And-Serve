@@ -18,6 +18,12 @@ Each group randomly has 1–3 customers, each randomly requests 1–3 items. Eac
 
 Orders start with stage-one items. Higher variants gradually join the order pool after 3, 8 and 16 completed groups, weighted toward simpler food. This is internal pacing, never displayed as a level or filler. Players can merge to any stage from the start. The PRNG state is saved so reloading does not reroll orders or the future sequence.
 
+## First-time tutorial and reset
+
+New players start with a text-free, mandatory tutorial guided by pulsing highlights and an animated hand. Three fixed customers request a stage-one burger, a stage-two burger, and a stage-two burger plus stage-one fries. Only the required generator or drag action is allowed at each step; there is no Skip button. The final customer waits for both items before paying. Completing the group unlocks normal play, retaining the earned coins. Tutorial progress resumes after reload; existing v2–v6 saves without tutorial progress bypass it.
+
+The Decorations panel has a **Reset Game** button at the bottom. **Cancel** keeps progress; confirming **Reset all progress?** clears this game's current and legacy saves, board, wallet, themes and sound setting, then restarts the new-player tutorial. Unrelated browser storage is preserved.
+
 ## Decorations and saves
 
 Completed orders earn coins only for permanent cosmetics: four wall designs, four counter designs and four nameplates (one free default per category). There are no accessory slots or props. Purchase auto-equips; owned items switch freely. No passive income, ingredient costs, bin refunds or bonuses. Order bubbles show icons/checks only, never payment amounts.
