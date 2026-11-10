@@ -25,6 +25,11 @@ const integer=(n:unknown,min:number,max:number)=>Number.isInteger(n)&&Number(n)>
 const validItem=(v:any)=>!!v&&integer(v.type,0,2)&&integer(v.level,1,4);
 const paymentFor=(items:Item[])=>items.reduce((sum,item)=>sum+RULES.orderUnitReward*2**(item.level-1),0);
 
+// Introduce one category at a time; serving it starts the next 2–3-group gap.
+const INTRODUCTIONS:readonly Item[]=Array.from({length:9},(_,i)=>({type:i%3,level:2+Math.floor(i/3)}));
+type DemandProgress={highestServed:number[];nextIntroductionAt:number|null;pending:Item|null};
+const orderKey=(items:Item[])=>items.map(item=>`${item.type}:${item.level}`).sort().join('|');
+
 type TutorialAction={kind:'generate';type:number}|{kind:'merge';from:number;to:number}|{kind:'serve';from:number;customer:number};
 export const TUTORIAL_ACTIONS:readonly TutorialAction[]=[
  {kind:'generate',type:0},{kind:'serve',from:0,customer:0},
@@ -38,14 +43,21 @@ export class Kitchen {
  get tutorialAction(){return this.tutorialStep===null?undefined:TUTORIAL_ACTIONS[this.tutorialStep];}
  private advanceTutorial(){if(this.tutorialStep!==null)this.tutorialStep=this.tutorialStep+1<TUTORIAL_ACTIONS.length?this.tutorialStep+1:null;}
  static newPlayer(){const k=new Kitchen();k.tutorialStep=0;k.customers=[[{type:0,level:1}],[{type:0,level:2}],[{type:0,level:2},{type:1,level:1}]].map((items,portrait)=>({portrait,items:items.map(item=>({...item,done:false})),payment:paymentFor(items),paid:false}));return k;}
+ demand:DemandProgress={highestServed:[1,1,1],nextIntroductionAt:null,pending:null};
  coins=RULES.startingCoins;groupsCompleted=0;rngState:number;
  board:(Item|null)[]=Array(9).fill(null);customers:Customer[]=[];
  owned:string[]=DECORATIONS.filter(d=>d.price===0).map(d=>d.id);
  equipped:Record<DecorationCategory,string>={wall:'wall-classic',counter:'counter-classic',nameplate:'nameplate-classic'};
- constructor(seed=Math.floor(Math.random()*0x100000000)){this.rngState=(seed>>>0)||0x6d2b79f5;this.makeOrders();}
+ constructor(seed=Math.floor(Math.random()*0x100000000)){this.rngState=(seed>>>0)||0x6d2b79f5;this.demand.nextIntroductionAt=2+this.pick(2);this.makeOrders();}
  private random(){let x=this.rngState;x^=x<<13;x^=x>>>17;x^=x<<5;this.rngState=x>>>0;return this.rngState/0x100000000;}
  private pick(max:number){return Math.floor(this.random()*max);}
- get orderStageCap(){return this.groupsCompleted<3?1:this.groupsCompleted<8?2:this.groupsCompleted<16?3:4;}
+ private nextIntroduction(){return INTRODUCTIONS.find(item=>item.level>this.demand.highestServed[item.type]);}
+ private recordServed(item:Item){
+  if(item.level<=this.demand.highestServed[item.type])return;
+  this.demand.highestServed[item.type]=item.level;
+  if(this.demand.pending?.type===item.type&&item.level>=this.demand.pending.level)this.demand.pending=null;
+  this.demand.nextIntroductionAt=this.demand.pending||!this.nextIntroduction()?null:this.groupsCompleted+1+2+this.pick(2);
+ }
  validSlot(i:number){return Number.isInteger(i)&&i>=0&&i<9;}
  addItem(type=0){const action=this.tutorialAction;if(action&&(action.kind!=='generate'||action.type!==type))return false;const slot=this.board.indexOf(null);if(!integer(type,0,2)||slot<0)return false;this.board[slot]={type,level:1};this.advanceTutorial();return true;}
  move(from:number,to:number){const action=this.tutorialAction;if(action&&(action.kind!=='merge'||action.from!==from||action.to!==to))return false;if(from===to||!this.validSlot(from)||!this.validSlot(to))return false;const a=this.board[from],b=this.board[to];if(!a)return false;if(!b){this.board[to]=a;this.board[from]=null;return true;}if(a.type===b.type&&a.level===b.level&&a.level<RULES.maxItemLevel){this.board[to]={type:a.type,level:a.level+1};this.board[from]=null;this.advanceTutorial();return true;}this.board[to]=a;this.board[from]=b;return true;}
@@ -53,20 +65,48 @@ export class Kitchen {
  purchaseDecoration(id:string){if(this.tutorialAction)return false;const d=DECORATIONS.find(d=>d.id===id);if(!d||this.owned.includes(id)||this.coins<d.price)return false;this.coins-=d.price;this.owned.push(id);this.equipped[d.category]=id;return true;}
  equipDecoration(id:string){if(this.tutorialAction)return false;const d=DECORATIONS.find(d=>d.id===id);if(!d||!this.owned.includes(id))return false;this.equipped[d.category]=id;return true;}
  decoration(category:DecorationCategory){return DECORATIONS.find(d=>d.id===this.equipped[category])!;}
- makeOrders(){
-  const weights=[50,30,15,5].slice(0,this.orderStageCap),sum=weights.reduce((a,b)=>a+b,0),portraits=[0,1,2,3,4,5];
-  const stage=()=>{let roll=this.random()*sum;for(let i=0;i<weights.length;i++){roll-=weights[i];if(roll<0)return i+1;}return weights.length;};
-  this.customers=Array.from({length:1+this.pick(3)},()=>{const portrait=portraits.splice(this.pick(portraits.length),1)[0];const types=[0,1,2],items:Request[]=Array.from({length:1+this.pick(3)},()=>({type:types.splice(this.pick(types.length),1)[0],level:stage(),done:false}));return {portrait,items,payment:paymentFor(items),paid:false};});
+ // Enumerate the small order pool so uniqueness never needs an unbounded reroll.
+ private orderPool(){
+  const pool:{items:Request[];weight:number}[]=[];
+  const visit=(type:number,items:Request[],weight:number)=>{
+   if(type===3){if(items.length)pool.push({items,weight});return;}
+   visit(type+1,items,weight);
+   const highest=this.demand.highestServed[type];
+   const levels=highest===1?[[1,1]]:[[highest,.7],[highest-1,.3]];
+   if(this.demand.pending?.type===type)levels.push([this.demand.pending.level,1]);
+   for(const [level,chance] of levels)visit(type+1,[...items,{type,level,done:false}],weight*chance);
+  };
+  visit(0,[],1);return pool;
  }
+ makeOrders(){
+  if(!this.demand.pending&&this.demand.nextIntroductionAt!==null&&this.groupsCompleted>=this.demand.nextIntroductionAt){
+   this.demand.pending=this.nextIntroduction()??null;this.demand.nextIntroductionAt=null;
+  }
+  const portraits=[0,1,2,3,4,5],used=new Set<string>(),pool=this.orderPool();
+  this.customers=Array.from({length:1+this.pick(3)},(_,index)=>{
+   // Only the first order carries the next-level introduction; other orders use 70/30 demand.
+   const pending=this.demand.pending;
+   const available=pool.filter(option=>!used.has(orderKey(option.items))&&(index===0&&pending
+    ?option.items.some(item=>item.type===pending.type&&item.level===pending.level)
+    :!option.items.some(item=>item.level>this.demand.highestServed[item.type])));
+   const lengths=[1,2,3].filter(length=>available.some(option=>option.items.length===length));
+   const length=lengths[this.pick(lengths.length)],choices=available.filter(option=>option.items.length===length);
+   let roll=this.random()*choices.reduce((sum,option)=>sum+option.weight,0);
+   const chosen=choices.find(option=>(roll-=option.weight)<0)??choices[choices.length-1];
+   const items=chosen.items.map(item=>({...item}));used.add(orderKey(items));
+   const portrait=portraits.splice(this.pick(portraits.length),1)[0];return {portrait,items,payment:paymentFor(items),paid:false};
+  });
+ }
+
  deliver(slot:number,customerIndex:number){
   const action=this.tutorialAction;if(action&&(action.kind!=='serve'||action.from!==slot||action.customer!==customerIndex))return {accepted:false,payment:0,groupComplete:false};
   const item=this.board[slot],c=this.customers[customerIndex];if(!this.validSlot(slot)||!item||!c||c.paid)return {accepted:false,payment:0,groupComplete:false};
   const match=c.items.find(r=>!r.done&&r.type===item.type&&r.level===item.level);if(!match)return {accepted:false,payment:0,groupComplete:false};
-  match.done=true;this.board[slot]=null;let payment=0;if(c.items.every(r=>r.done)){c.paid=true;payment=c.payment;this.coins+=payment;}
+  this.recordServed(item);match.done=true;this.board[slot]=null;let payment=0;if(c.items.every(r=>r.done)){c.paid=true;payment=c.payment;this.coins+=payment;}
   const groupComplete=this.customers.every(customer=>customer.paid);if(groupComplete){this.groupsCompleted++;this.makeOrders();}
   this.advanceTutorial();return {accepted:true,payment,groupComplete};
  }
- snapshot(){return {version:6,tutorialStep:this.tutorialStep,coins:this.coins,groupsCompleted:this.groupsCompleted,rngState:this.rngState,board:this.board,customers:this.customers,owned:this.owned,equipped:this.equipped};}
+ snapshot(){return {version:6,tutorialStep:this.tutorialStep,demand:this.demand,coins:this.coins,groupsCompleted:this.groupsCompleted,rngState:this.rngState,board:this.board,customers:this.customers,owned:this.owned,equipped:this.equipped};}
  static restore(data:unknown){
   const fresh=new Kitchen();if(!data||typeof data!=='object')return fresh;const p=data as Record<string,any>;
   if(!integer(p.coins,0,1e9))return fresh;
@@ -78,9 +118,26 @@ export class Kitchen {
   fresh.coins=p.coins;
   if(!(p.version===6?Kitchen.restoreDecor(p,fresh):Kitchen.migrateDecor(p,fresh)))return new Kitchen();
   fresh.groupsCompleted=p.groupsCompleted;fresh.rngState=p.rngState;fresh.board=structuredClone(p.board);fresh.customers=structuredClone(p.customers);
-  if(duplicates)fresh.makeOrders();
   if(p.version===6&&integer(p.tutorialStep,0,TUTORIAL_ACTIONS.length-1))fresh.tutorialStep=p.tutorialStep;
+  if(p.version===6&&p.demand!==undefined){
+   const d=p.demand;
+   if(!d||!Array.isArray(d.highestServed)||d.highestServed.length!==3||!d.highestServed.every((level:unknown)=>integer(level,1,4))||
+    !(d.nextIntroductionAt===null||integer(d.nextIntroductionAt,0,1e9+4))||
+    !(d.pending===null||validItem(d.pending)&&d.pending.level> d.highestServed[d.pending.type]))return new Kitchen();
+   fresh.demand=structuredClone(d);
+   const next=fresh.nextIntroduction();
+   if(d.pending&&(d.nextIntroductionAt!==null||!next||next.type!==d.pending.type||next.level!==d.pending.level)||!d.pending&&!!next!==(d.nextIntroductionAt!==null))return new Kitchen();
+  }else fresh.migrateDemand(p.version===6&&p.tutorialStep===null&&p.groupsCompleted>0);
+  if(duplicates)fresh.makeOrders();
   return fresh;
+ }
+ private migrateDemand(completedTutorial=false){
+  this.demand={highestServed:[1,1,1],pending:null,nextIntroductionAt:null};
+  // Old saves have no full serve history. Preserve current orders and infer only recorded deliveries.
+  for(const customer of this.customers)for(const item of customer.items)if(item.done)this.demand.highestServed[item.type]=Math.max(this.demand.highestServed[item.type],item.level);
+  // The previous tutorial always served burger L2 before completion (or from step six onward).
+  if(completedTutorial||this.tutorialStep!==null&&this.tutorialStep>=6)this.demand.highestServed[0]=Math.max(2,this.demand.highestServed[0]);
+  this.demand.nextIntroductionAt=this.nextIntroduction()?this.groupsCompleted+1+2+this.pick(2):null;
  }
  private static restoreDecor(p:Record<string,any>,target:Kitchen){
   if(!Array.isArray(p.owned)||p.owned.some((id:any)=>!DECORATIONS.some(d=>d.id===id))||new Set(p.owned).size!==p.owned.length||!p.equipped)return false;
@@ -101,6 +158,6 @@ export class Kitchen {
   target.coins=p.coins;if(!Kitchen.migrateDecor(p,target))return new Kitchen();
   target.groupsCompleted=p.completed+p.shop*20;
   target.board=p.shop===0?p.board.map((v:any)=>v?{type:[1,0,2][v.type],level:v.level}:null):Array(9).fill(null);
-  target.makeOrders();return target;
+  target.migrateDemand();target.makeOrders();return target;
  }
 }

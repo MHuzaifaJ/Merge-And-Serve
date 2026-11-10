@@ -68,7 +68,7 @@ class Shop extends Phaser.Scene{
  save(){if(this.review)return;try{localStorage.setItem('merge-serve-v6',JSON.stringify(this.k.snapshot()));}catch{}}
  cancel(){this.binArt?.clearTint();this.drag=-1;this.moved=false;this.ghost?.destroy();this.ghost=undefined;}
  tone(kind:'buy'|'merge'|'serve'|'error'|'bin'){if(!this.soundOn)return;try{this.audio??=new AudioContext();void this.audio.resume();const ctx=this.audio;({buy:[440],merge:[520,780],serve:[523,659,784],error:[170],bin:[240,150]}[kind]).forEach((f,i)=>{const osc=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+i*.09;osc.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.08,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.13);osc.connect(g);g.connect(ctx.destination);osc.start(t);osc.stop(t+.15);});}catch{}}
- note(s:string,error=false){this.message=s;if(error){this.tone('error');this.cameras.main.shake(90,.002);}this.save();this.paint();}
+ note(s:string,error=false){this.message=s;if(error)this.tone('error');this.save();this.paint();}
  pop(amount:number,x:number,y:number){const group=this.add.container(x,y);const coin=this.add.image(-30,0,'icons',ICON.coin).setDisplaySize(34,34),t=this.add.text(-9,0,`+${amount}`,{fontSize:'23px',fontFamily:FONT,fontStyle:'normal',color:ink,stroke:'#fffcf3',strokeThickness:4}).setResolution(DENSITY).setOrigin(0,.5);group.add([coin,t]);this.fx.add(group);this.tweens.add({targets:group,y:y-35,alpha:0,duration:850,onComplete:()=>group.destroy()});}
  up(p:Point){const from=this.drag,moved=this.moved;this.cancel();if(this.panel||!moved||from<0)return;if(inside(p,this.bin))this.discard(from);else{const c=servingCustomer(p,this.orders);if(c>=0)this.deliver(from,this.orders[c].customerIndex);else{const to=this.cells.findIndex(r=>inside(p,r));if(to>=0)this.move(from,to);}}}
  move(a:number,b:number){const source=this.k.board[a],target=this.k.board[b],merged=!!source&&!!target&&source.type===target.type&&source.level===target.level&&source.level<4;if(!this.k.move(a,b)){this.note('',true);return;}this.note('');if(merged){this.tone('merge');const r=this.cells[b],sparkle=this.add.image(r.x+r.w/2,r.y+r.h/2,'icons',ICON.sparkle).setDisplaySize(92,92);this.fx.add(sparkle);this.tweens.add({targets:sparkle,scaleX:sparkle.scaleX*1.35,scaleY:sparkle.scaleY*1.35,alpha:0,duration:380,onComplete:()=>sparkle.destroy()});}}
@@ -143,10 +143,6 @@ class Shop extends Phaser.Scene{
   const center=(r:Rect)=>({x:r.x+r.w/2,y:r.y+r.h/2});
   const source=action.kind==='generate'?spawnerRect(action.type):boardCell(action.from);
   const target=action.kind==='merge'?boardCell(action.to):action.kind==='serve'?customerDialog(3,action.customer):source;
-  for(const r of action.kind==='generate'?[source]:[source,target]){
-   const glow=this.surface({x:r.x-5,y:r.y-5,w:r.w+10,h:r.h+10},'card').setTint(0xffdf63).setAlpha(.4);
-   this.hintObjects.push(glow);this.tweens.add({targets:glow,alpha:.12,duration:650,yoyo:true,repeat:-1});
-  }
   const start=center(source),end=center(target);if(action.kind==='generate')start.y-=34;
   const hand=this.art('tutorial-hand',start.x,start.y,54,68).setOrigin(.25,.0625);this.hintObjects.push(hand);
   if(action.kind==='generate')this.tweens.add({targets:hand,y:start.y+12,scaleX:hand.scaleX*.9,scaleY:hand.scaleY*.9,duration:500,yoyo:true,repeat:-1});
