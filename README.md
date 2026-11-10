@@ -6,7 +6,7 @@ For mobile/cloud development and automatic itch publishing, see [the setup guide
 
 ## Play
 
-Start with zero coins and nine shared merge slots. All three free generators are available from the start: **Burger / Fries / Drink**, left to right. Merge identical type and stage up to stage four; move items to empty slots or discard them for free. Base items are complete food, not ingredients.
+Start with zero coins and nine shared merge slots. All three free generators are available from the start: **Burger / Fries / Drink**, left to right. Drag and drop items to merge identical type and stage up to stage four, move to empty slots, or discard for free. Dropping onto any other occupied slot swaps the two items, including matching stage-four items. Board items cannot be moved by clicking. Base items are complete food, not ingredients.
 
 | Chain | Stage 1 | Stage 2 | Stage 3 | Stage 4 |
 |---|---|---|---|---|
@@ -14,7 +14,7 @@ Start with zero coins and nine shared merge slots. All three free generators are
 | Fries | Plain fries | Curly fries | Cheese fries | Loaded fries |
 | Drink | Small soda | Large soda | Ice-cream float | Special shake |
 
-Each group randomly has 1–3 customers, each randomly requests 1–3 items. Each order contains distinct categories: at most one burger, one fries and one drink, with one variant of each selected category. An individual completed order pays once; its check stays until every order in the current group is done. Then a new random group arrives automatically. The board, coins and decorations stay. No visible levels, progress bar, unlocks, days, patience timers, final screen or second shop.
+Each group randomly has 1–3 customers, each randomly requests 1–3 items. Each order contains distinct categories: at most one burger, one fries and one drink, with one variant of each selected category. An individual completed order pays once; the customer and dialog disappear, leaving their position empty until every order in the current group is done. Then a new random group arrives automatically. The board, coins and decorations stay. No visible levels, progress bar, unlocks, days, patience timers, final screen or second shop.
 
 Orders start with stage-one items. Higher variants gradually join the order pool after 3, 8 and 16 completed groups, weighted toward simpler food. This is internal pacing, never displayed as a level or filler. Players can merge to any stage from the start. The PRNG state is saved so reloading does not reroll orders or the future sequence.
 

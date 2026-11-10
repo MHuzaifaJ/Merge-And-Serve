@@ -36,7 +36,7 @@ export class Kitchen {
  get orderStageCap(){return this.groupsCompleted<3?1:this.groupsCompleted<8?2:this.groupsCompleted<16?3:4;}
  validSlot(i:number){return Number.isInteger(i)&&i>=0&&i<9;}
  addItem(type=0){const slot=this.board.indexOf(null);if(!integer(type,0,2)||slot<0)return false;this.board[slot]={type,level:1};return true;}
- move(from:number,to:number){if(from===to||!this.validSlot(from)||!this.validSlot(to))return false;const a=this.board[from],b=this.board[to];if(!a)return false;if(!b){this.board[to]=a;this.board[from]=null;return true;}if(a.type===b.type&&a.level===b.level&&a.level<RULES.maxItemLevel){this.board[to]={type:a.type,level:a.level+1};this.board[from]=null;return true;}return false;}
+ move(from:number,to:number){if(from===to||!this.validSlot(from)||!this.validSlot(to))return false;const a=this.board[from],b=this.board[to];if(!a)return false;if(!b){this.board[to]=a;this.board[from]=null;return true;}if(a.type===b.type&&a.level===b.level&&a.level<RULES.maxItemLevel){this.board[to]={type:a.type,level:a.level+1};this.board[from]=null;return true;}this.board[to]=a;this.board[from]=b;return true;}
  bin(i:number){if(!this.validSlot(i)||!this.board[i])return false;this.board[i]=null;return true;}
  purchaseDecoration(id:string){const d=DECORATIONS.find(d=>d.id===id);if(!d||this.owned.includes(id)||this.coins<d.price)return false;this.coins-=d.price;this.owned.push(id);this.equipped[d.category]=id;return true;}
  equipDecoration(id:string){const d=DECORATIONS.find(d=>d.id===id);if(!d||!this.owned.includes(id))return false;this.equipped[d.category]=id;return true;}
