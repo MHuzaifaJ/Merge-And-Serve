@@ -8,13 +8,16 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --experimental-strip-types --test tests/model.test.mjs tests/layout.test.mjs",
-    "test:assets": "python scripts/verify_slices.py"
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "test:assets": "python scripts/verify_slices.py",
+    "dev:poki": "vite --host 127.0.0.1 --mode poki",
+    "build:poki": "tsc --noEmit && vite build --mode poki --outDir dist-poki"
   },
   "dependencies": {
     "phaser": "^3.90.0"
   },
   "devDependencies": {
+    "@poki/sdk": "0.0.5",
     "typescript": "^5.9.3",
     "vite": "^6.4.1"
   }

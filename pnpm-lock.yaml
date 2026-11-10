@@ -15,6 +15,9 @@ importers:
         specifier: ^3.90.0
         version: 3.90.0
     devDependencies:
+      '@poki/sdk':
+        specifier: 0.0.5
+        version: 0.0.5
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -186,6 +189,10 @@ packages:
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+
+  '@poki/sdk@0.0.5':
+    resolution: {integrity: sha512-3WiC5jtxoJC1LlcHeLwo1oD8WZ++tIchs/F/BVWMlajEuuFBkDZtv/AqTEk2+N2dn1y/XQEi6VA53yqmZ+2Ulw==}
+    engines: {node: '>=14'}
 
   '@rollup/wasm-node@4.68.0':
     resolution: {integrity: sha512-lv6TzXKQKKQ1cWnQBU1a0liwm+IvSVQ2lCUXo4p1NqATGw+aBnVpZmi/cW1CNF7OJ/3EAdSlbEgnJwcsdWtADw==}
@@ -371,6 +378,8 @@ snapshots:
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     optional: true
+
+  '@poki/sdk@0.0.5': {}
 
   '@rollup/wasm-node@4.68.0':
     dependencies:

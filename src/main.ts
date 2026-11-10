@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import {poki,initializePoki} from './poki-browser';
+import {GameTracking,captureTrackingState,itemName} from './tracking';
 import {Kitchen,DECORATIONS,type DecorationCategory} from './model';
 import './style.css';
 import sliceLayout from './slice-layout.json';
@@ -14,6 +16,7 @@ type Panel='cream'|'wood'|'card'|'bubble'|'track'|'fill';
 const ICON={coin:0,check:1,close:2,mute:3,unlock:4,shop:5,trophy:6,sparkle:7,empty:8};
 
 class Shop extends Phaser.Scene{
+ tracking=new GameTracking(poki);hasPlayed=false;focused=document.hasFocus();
  k=new Kitchen();ui!:Phaser.GameObjects.Container;fx!:Phaser.GameObjects.Container;
  drag=-1;moved=false;origin={x:0,y:0};ghost?:Phaser.GameObjects.Image;
  cells:Rect[]=[];orders:(ServeTarget&{customerIndex:number})[]=[];bin=BIN;binArt?:Phaser.GameObjects.Image;
@@ -38,13 +41,21 @@ class Shop extends Phaser.Scene{
    if(state==='purchase'||state==='poor'){this.k.owned=DECORATIONS.filter(d=>d.price===0).map(d=>d.id);this.k.coins=state==='poor'?0:200;}
   }}
   this.ui=this.add.container(0,0);this.fx=this.add.container(0,0).setDepth(20);
-  this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.panel)return;const i=this.cells.findIndex(r=>inside(p,r));const action=this.k.tutorialAction;if(i<0||!this.k.board[i]||action&&(action.kind==='generate'||action.from!==i))return;this.drag=i;this.origin={x:p.x,y:p.y};this.moved=false;});
+  this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.panel)return;const i=this.cells.findIndex(r=>inside(p,r));const action=this.k.tutorialAction;if(i<0||!this.k.board[i]||action&&(action.kind==='generate'||action.from!==i))return;this.beginGameplay();this.drag=i;this.origin={x:p.x,y:p.y};this.moved=false;});
   this.input.on('pointermove',(pointer:Phaser.Input.Pointer)=>{const p=this.logical(pointer);if(this.drag<0)return;const started=!this.moved&&Phaser.Math.Distance.Between(p.x,p.y,this.origin.x,this.origin.y)>10;this.moved ||= started;if(started)this.paint();const item=this.k.board[this.drag];if(this.moved&&item){if(!this.ghost)this.ghost=this.add.image(p.x,p.y,'foods',this.frame(item.type,item.level)).setDisplaySize(100,100).setDepth(50);this.ghost.setPosition(p.x,p.y-20);this.binArt?.setTint(inside(p,BIN)?0xffe4a3:0xffffff);}});
   this.input.on('pointerup',(p:Phaser.Input.Pointer)=>this.up(this.logical(p)));this.input.on('pointerupoutside',()=>this.cancel());
-  window.addEventListener('blur',()=>{this.cancel();this.save();});window.addEventListener('pagehide',()=>this.save());document.addEventListener('visibilitychange',()=>{if(document.hidden){this.cancel();this.save();}});
-  this.paint();this.save();document.getElementById('loading')?.remove();
+  window.addEventListener('blur',()=>{this.focused=false;this.cancel();this.save();this.syncGameplay();this.suspendAudio();});
+  window.addEventListener('focus',()=>{this.focused=true;this.syncGameplay();this.resumeAudio();});
+  window.addEventListener('pagehide',()=>{this.focused=false;this.save();poki.setPlaying(false);});
+  window.addEventListener('pageshow',()=>{this.focused=document.hasFocus();this.syncGameplay();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){this.cancel();this.save();this.suspendAudio();}else this.resumeAudio();this.syncGameplay();});
+  this.paint();this.save();document.getElementById('loading')?.remove();this.tracking.resumed(this.k);poki.loadingFinished();
  }
 
+ beginGameplay(){this.hasPlayed=true;this.syncGameplay();}
+ syncGameplay(){poki.setPlaying(this.hasPlayed&&!this.panel&&!document.hidden&&this.focused);}
+ suspendAudio(){if(this.audio)void this.audio.suspend().catch(()=>{});}
+ resumeAudio(){if(this.audio&&this.soundOn&&this.focused&&!document.hidden)void this.audio.resume().catch(()=>{});}
  logical(p:Phaser.Input.Pointer){return this.cameras.main.getWorldPoint(p.x,p.y);}
  frame(type:number,level:number){return type*4+level-1;}
  art(key:string,x:number,y:number,w:number,h:number,frame?:number|string){const image=this.add.image(x,y,key,frame??'__BASE').setDisplaySize(w,h).setOrigin(.5);this.ui.add(image);return image;}
@@ -71,10 +82,10 @@ class Shop extends Phaser.Scene{
  note(s:string,error=false){this.message=s;if(error)this.tone('error');this.save();this.paint();}
  pop(amount:number,x:number,y:number){const group=this.add.container(x,y);const coin=this.add.image(-30,0,'icons',ICON.coin).setDisplaySize(34,34),t=this.add.text(-9,0,`+${amount}`,{fontSize:'23px',fontFamily:FONT,fontStyle:'normal',color:ink,stroke:'#fffcf3',strokeThickness:4}).setResolution(DENSITY).setOrigin(0,.5);group.add([coin,t]);this.fx.add(group);this.tweens.add({targets:group,y:y-35,alpha:0,duration:850,onComplete:()=>group.destroy()});}
  up(p:Point){const from=this.drag,moved=this.moved;this.cancel();if(this.panel||!moved||from<0)return;if(inside(p,this.bin))this.discard(from);else{const c=servingCustomer(p,this.orders);if(c>=0)this.deliver(from,this.orders[c].customerIndex);else{const to=this.cells.findIndex(r=>inside(p,r));if(to>=0)this.move(from,to);}}}
- move(a:number,b:number){const source=this.k.board[a],target=this.k.board[b],merged=!!source&&!!target&&source.type===target.type&&source.level===target.level&&source.level<4;if(!this.k.move(a,b)){this.note('',true);return;}this.note('');if(merged){this.tone('merge');const r=this.cells[b],sparkle=this.add.image(r.x+r.w/2,r.y+r.h/2,'icons',ICON.sparkle).setDisplaySize(92,92);this.fx.add(sparkle);this.tweens.add({targets:sparkle,scaleX:sparkle.scaleX*1.35,scaleY:sparkle.scaleY*1.35,alpha:0,duration:380,onComplete:()=>sparkle.destroy()});}}
- discard(i:number){if(!this.k.bin(i))return;this.tone('bin');this.note('');}
- deliver(i:number,c:number){const result=this.k.deliver(i,c);if(!result.accepted){this.note('',true);return;}this.tone('serve');this.save();this.paint();if(result.payment)this.pop(result.payment,365,90);}
- buy(type:number){if(!this.k.addItem(type)){this.note('',true);return;}this.tone('buy');this.note('');}
+ move(a:number,b:number){const before=captureTrackingState(this.k);const source=this.k.board[a],target=this.k.board[b],merged=!!source&&!!target&&source.type===target.type&&source.level===target.level&&source.level<4;if(!this.k.move(a,b)){this.note('',true);return;}this.beginGameplay();this.tracking.action(before,this.k,itemName(this.k.board[b]!),merged?'merge':target?'swap':'move');this.note('');if(merged){this.tone('merge');const r=this.cells[b],sparkle=this.add.image(r.x+r.w/2,r.y+r.h/2,'icons',ICON.sparkle).setDisplaySize(92,92);this.fx.add(sparkle);this.tweens.add({targets:sparkle,scaleX:sparkle.scaleX*1.35,scaleY:sparkle.scaleY*1.35,alpha:0,duration:380,onComplete:()=>sparkle.destroy()});}}
+ discard(i:number){const before=captureTrackingState(this.k),item=this.k.board[i];if(!item||!this.k.bin(i))return;this.beginGameplay();this.tracking.action(before,this.k,itemName(item),'discard');this.tone('bin');this.note('');}
+ deliver(i:number,c:number){const before=captureTrackingState(this.k),item=this.k.board[i];const result=this.k.deliver(i,c);if(!result.accepted){this.note('',true);return;}this.beginGameplay();this.tracking.action(before,this.k,itemName(item!),'serve',result.payment>0);this.tone('serve');this.save();this.paint();if(result.payment)this.pop(result.payment,365,90);}
+ buy(type:number){const before=captureTrackingState(this.k);if(!this.k.addItem(type)){this.note('',true);return;}this.beginGameplay();this.tracking.action(before,this.k,itemName({type,level:1}),'generate');this.tone('buy');this.note('');}
  paint(){for(const object of this.hintObjects)this.tweens.killTweensOf(object);this.hintObjects=[];this.ui.removeAll(true);const k=this.k;
   if(import.meta.env.DEV){const page=new URLSearchParams(location.search).get('review');if(page?.startsWith('atlas-')){
    this.surface({x:0,y:0,w:480,h:860});this.text(240,52,'SLICE REVIEW',28).setOrigin(.5);
@@ -91,7 +102,7 @@ class Shop extends Phaser.Scene{
   this.art('board',BOARD.x+BOARD.w/2,BOARD.y+BOARD.h/2,BOARD.w,BOARD.h,'visible');this.cells=[];
   for(let i=0;i<9;i++){const r=boardCell(i);this.cells.push(r);const item=k.board[i];if(item)this.food(r.x+r.w/2,r.y+r.h/2,item.type,item.level,74);}
   this.binArt=this.art('binzone',BIN.x+BIN.w/2,BIN.y+BIN.h/2,BIN.w,BIN.h,0);this.art('controls',BIN.x+BIN.w/2,BIN.y+BIN.h/2,50,50,1);
-  this.control({x:76,y:8,w:62,h:62},2,()=>{this.cancel();this.panel=true;this.message='';this.paint();});
+  this.control({x:76,y:8,w:62,h:62},2,()=>{this.cancel();this.panel=true;this.syncGameplay();this.message='';poki.measure('button','decorations','interact');this.paint();});
   [0,1,2].forEach(type=>{const r=spawnerRect(type);this.buttonSurface(r,true);this.hit(r,()=>this.buy(type),true);this.food(r.x+r.w/2,r.y+r.h/2,type,1,buttonIconSize(r));});
   if(this.panel)this.decorationPanel();
   if(this.k.tutorialAction)this.tutorialHint();
@@ -116,26 +127,26 @@ class Shop extends Phaser.Scene{
  decorationPanel(){const k=this.k;
   this.surface({x:0,y:0,w:480,h:860},'card').setTint(0x224e42).setAlpha(.72);const shield=this.add.zone(0,0,480,860).setOrigin(0).setInteractive();this.ui.add(shield);
   this.surface({x:15,y:105,w:450,h:670},'wood');this.text(240,143,'DECORATIONS',26).setOrigin(.5);
-  this.icon(423,140,'close',43);this.hit({x:400,y:117,w:46,h:46},()=>{this.panel=false;this.paint();});
+  this.icon(423,140,'close',43);this.hit({x:400,y:117,w:46,h:46},()=>{this.panel=false;this.syncGameplay();this.paint();});
   const tabs=[['wall','Walls'],['counter','Counters'],['nameplate','Nameplates']] as const;
   tabs.forEach(([category,label],i)=>this.button({x:32+i*136,y:184,w:128,h:45},label,()=>{this.decorTab=category;this.message='';this.paint();},this.decorTab===category,15));
   DECORATIONS.filter(d=>d.category===this.decorTab).forEach((d,i)=>{const y=235+i*104,owned=k.owned.includes(d.id),equipped=k.equipped[d.category]===d.id;
    this.surface({x:30,y,w:420,h:88},equipped?'card':'cream');this.decorationPreview(d.id,70,y+44,58);this.text(112,y+26,d.name,15,ink,166);
-   const r={x:292,y:y+24,w:143,h:40};this.button(r,owned&&!equipped?'Equip':'',()=>{if(equipped)return;const ok=owned?k.equipDecoration(d.id):k.purchaseDecoration(d.id);if(!ok){this.note('Not enough coins. Complete orders to earn more.',true);return;}this.tone('merge');this.note('');},equipped,14);
+   const r={x:292,y:y+24,w:143,h:40};this.button(r,owned&&!equipped?'Equip':'',()=>{if(equipped)return;const ok=owned?k.equipDecoration(d.id):k.purchaseDecoration(d.id);if(!ok){this.note('Not enough coins. Complete orders to earn more.',true);return;}poki.measure('cosmetic',d.id,owned?'equip':'purchase');this.tone('merge');this.note('');},equipped,14);
    if(equipped)this.icon(r.x+r.w/2,y+44,'check',34);else if(!owned)this.price(r.x+r.w/2-1,y+44,d.price,17);
   });
   if(this.message){this.surface({x:34,y:654,w:412,h:45});this.text(51,660,this.message,14,ink,375);}
-  this.button({x:140,y:710,w:200,h:44},'Reset Game',()=>{this.resetConfirm=true;this.paint();},false,18);
+  this.button({x:140,y:710,w:200,h:44},'Reset Game',()=>{this.resetConfirm=true;poki.measure('button','reset_game','interact');this.paint();},false,18);
   if(this.resetConfirm){
    this.surface({x:0,y:0,w:480,h:860},'card').setTint(0x224e42).setAlpha(.8);this.ui.add(this.add.zone(0,0,480,860).setOrigin(0).setInteractive());
    this.surface({x:40,y:310,w:400,h:230});this.text(240,350,'Reset all progress?',25).setOrigin(.5);
    this.text(240,397,'Your shop and tutorial will start over.',16).setOrigin(.5);
-   this.button({x:65,y:456,w:160,h:48},'Cancel',()=>{this.resetConfirm=false;this.paint();});
+   this.button({x:65,y:456,w:160,h:48},'Cancel',()=>{this.resetConfirm=false;poki.measure('button','reset_game','cancel');this.paint();});
    this.button({x:255,y:456,w:160,h:48},'Reset',()=>this.resetGame(),true);
   }
  }
  resetGame(){
-  this.cancel();this.fx.removeAll(true);this.panel=false;this.resetConfirm=false;this.message='';this.decorTab='wall';
+  this.tracking.reset();this.hasPlayed=false;poki.setPlaying(false);this.cancel();this.fx.removeAll(true);this.panel=false;this.resetConfirm=false;this.message='';this.decorTab='wall';
   if(!this.review)try{for(const key of ['merge-serve-v2','merge-serve-v3','merge-serve-v4','merge-serve-v5','merge-serve-v6','merge-serve-sound'])localStorage.removeItem(key);}catch{}
   this.soundOn=true;this.k=Kitchen.newPlayer();this.save();this.paint();
  }
@@ -150,5 +161,6 @@ class Shop extends Phaser.Scene{
  }
  update(t:number){if(t-this.lastSave>=1000){this.save();this.lastSave=t;}}
 }
+initializePoki();
 // Wait for the bundled display font before Phaser creates canvas text textures.
 document.fonts.load('24px "Lilita One"').catch(()=>[]).then(()=>new Phaser.Game({type:Phaser.AUTO,parent:'game',width:480*DENSITY,height:860*DENSITY,backgroundColor:'#153d37',scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:Shop,render:{antialias:true}}));

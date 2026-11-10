@@ -34,13 +34,22 @@ jobs:
         run: pnpm test
       - name: Verify sliced assets
         run: pnpm test:assets
-      - name: Type-check and build
-        run: pnpm build
+      - name: Type-check and build both targets
+        run: |
+          pnpm build
+          pnpm build:poki
       - name: Keep browser build
         uses: actions/upload-artifact@v4
         with:
           name: browser-build
           path: dist/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Keep Poki build for testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: poki-browser-build
+          path: dist-poki/
           if-no-files-found: error
           retention-days: 14
 

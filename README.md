@@ -41,6 +41,10 @@ Original PNG sources are in art-source/. The asset pipeline finds real silhouett
 Dev-only review pages: `?review=three`, `single`, `paid`, `purchase`, `poor`, `muted`, `decor-wall`, `decor-counter`, `decor-nameplate`, `atlas-foods`, `atlas-icons`, `atlas-controls`, `atlas-people`, `atlas-walls`, `atlas-counters`, `atlas-nameplates`, `theme-0`, `theme-1`, `theme-2`, `theme-3`. Fixtures never save and are stripped from production.
 
 
+## Poki build and tracking
+
+Use `pnpm dev:poki` for SDK testing and `pnpm build:poki` to produce `dist-poki/`. The regular `pnpm build`/itch target does not load Poki or send Poki events. See [Poki integration and event reference](docs/poki.md) for lifecycle behavior, the tracked events, offline fallback and testing instructions. These changes live on the separate Poki feature branch; publishing to Poki is a separate action.
+
 ## Current layout
 
 Board is exactly centered at logical x=240, 300 x 300. A separate right-side dotted bin strip has the same 300px height; its entire area accepts discard drops. Decorations sits immediately right of sound in the top-left bar. Order icons use one fixed 40px canvas for 1-3 requests, centered without rescaling. Generator icons fit within button bounds with at least 10px padding. Matching dishes can be dropped on the visible customer body or order bubble; adjacent targets resolve to the nearest customer center. Walls contain no roof/awning or baked-in sign; the nameplate is independent.
