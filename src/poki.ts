@@ -6,7 +6,7 @@ export type PokiLoader=(signal:AbortSignal)=>Promise<PokiAPI>;
 
 /** Keeps the game independent of SDK availability and coalesces lifecycle transitions. */
 export class PokiBridge {
- status:'disabled'|'loading'|'ready'|'degraded'|'unavailable';
+ status:'disabled'|'loading'|'waiting'|'ready'|'degraded'|'unavailable';
  private sdk?:PokiAPI;
  private initialization?:Promise<void>;
  private loaded=false;
@@ -19,17 +19,18 @@ export class PokiBridge {
   if(this.initialization)return this.initialization;
   if(this.status==='disabled')return Promise.resolve();
   const controller=new AbortController();let timer:ReturnType<typeof setTimeout>;
-  const timeout=new Promise<never>((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('Poki SDK initialization timed out'));},timeoutMs);});
+  // The deadline reports a slow connection; it must not permanently disable a late Inspector handshake.
+  const timeout=new Promise<void>(resolve=>{timer=setTimeout(()=>{this.status='waiting';resolve();},timeoutMs);});
   const initialize=Promise.resolve().then(()=>loader(controller.signal)).then(async sdk=>{
    if(controller.signal.aborted)return;
    let initialized=true;
    try{await sdk.init();}catch{initialized=false;}
    if(controller.signal.aborted)return;
    this.sdk=sdk;this.status=initialized?'ready':'degraded';this.call(()=>sdk.enableEventTracking());this.flush();
-  });
-  this.initialization=Promise.race([initialize,timeout]).catch(()=>{
+  }).catch(()=>{
    controller.abort();this.status='unavailable';this.sdk=undefined;this.pending=[];
-  }).finally(()=>clearTimeout(timer));
+  });
+  this.initialization=Promise.race([initialize,timeout]).finally(()=>clearTimeout(timer));
   return this.initialization;
  }
  loadingFinished(){this.loaded=true;this.flush();}
@@ -39,13 +40,14 @@ export class PokiBridge {
   if(this.sdk&&this.loadingReported)this.call(()=>this.sdk!.measure(category,what,action));
   else {if(this.pending.length===256)this.pending.shift();this.pending.push([category,what,action]);}
  }
- private call(fn:()=>void){try{fn();}catch{/* SDK/analytics failures must never interrupt play. */}}
+ // A failed lifecycle call remains retryable on the next synchronization.
+ private call(fn:()=>void){try{fn();return true;}catch{return false;}}
  private flush(){
   if(!this.sdk||!this.loaded)return;
-  if(!this.loadingReported){this.loadingReported=true;this.call(()=>this.sdk!.gameLoadingFinished());}
+  if(!this.loadingReported){if(!this.call(()=>this.sdk!.gameLoadingFinished()))return;this.loadingReported=true;}
   if(this.playing!==this.playingReported){
-   this.playingReported=this.playing;
-   this.call(()=>this.playing?this.sdk!.gameplayStart():this.sdk!.gameplayStop());
+   const playing=this.playing;
+   if(this.call(()=>playing?this.sdk!.gameplayStart():this.sdk!.gameplayStop()))this.playingReported=playing;
   }
   for(const [category,what,action] of this.pending.splice(0))this.call(()=>this.sdk!.measure(category,what,action));
  }

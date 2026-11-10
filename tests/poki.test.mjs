@@ -30,11 +30,11 @@ test('SDK readiness never falsely starts gameplay and retains the latest focus/m
 test('normal builds never load or report to Poki',async()=>{
  const bridge=new PokiBridge(false);await bridge.initialize(async()=>{throw Error('loader must not run');});bridge.loadingFinished();bridge.setPlaying(true);bridge.measure('item','burger_1','generate');assert.equal(bridge.status,'disabled');
 });
-test('blocked SDK and initialization timeouts preserve offline play and discard late results',async()=>{
+test('blocked SDK stays safe while slow SDK loading remains reconnectable',async()=>{
  const blocked=new PokiBridge(true);blocked.measure('tutorial','onboarding','start');await blocked.initialize(async()=>{throw Error('CDN blocked');});assert.equal(blocked.status,'unavailable');assert.doesNotThrow(()=>{blocked.loadingFinished();blocked.setPlaying(true);blocked.measure('item','burger_1','generate');});
  const {sdk,calls}=fakeSDK();let resolveLoader;const bridge=new PokiBridge(true);
- await bridge.initialize(()=>new Promise(resolve=>{resolveLoader=resolve;}),5);assert.equal(bridge.status,'unavailable');resolveLoader(sdk);await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(calls,[]);
- const hung=new PokiBridge(true);await hung.initialize(async()=>({...sdk,init:()=>new Promise(()=>{})}),5);assert.equal(hung.status,'unavailable');
+ await bridge.initialize(()=>new Promise(resolve=>{resolveLoader=resolve;}),5);assert.equal(bridge.status,'waiting');resolveLoader(sdk);await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(calls,[['init'],['enableEventTracking']]);assert.equal(bridge.status,'ready');
+ const hung=new PokiBridge(true);await hung.initialize(async()=>({...sdk,init:()=>new Promise(()=>{})}),5);assert.equal(hung.status,'waiting');
 });
 test('a rejected SDK init still allows safe loading/gameplay reporting, and failed measures stay isolated',async()=>{
  const {sdk,calls}=fakeSDK();sdk.init=async()=>{throw Error('adblock');};sdk.measure=()=>{throw Error('tracking failed');};
@@ -73,4 +73,31 @@ test('new category introductions emit a start event once at the group transition
  k.demand={highestServed:[2,1,1],pending:null,nextIntroductionAt:1};k.customers=[{portrait:0,items:[{type:0,level:1,done:false}],payment:30,paid:false}];k.board[0]={type:0,level:1};
  const before=captureTrackingState(k);k.deliver(0,0);tracking.action(before,k,'burger_1','serve',true);
  assert.equal(events.filter(e=>e.join('/')==='upgrade/fries_2/start').length,1);
+});
+
+test('slow Inspector initialization reconnects later and reports loading before gameplay',async()=>{
+ const {sdk,calls}=fakeSDK();let finishInit;
+ sdk.init=()=>{calls.push(['init']);return new Promise(resolve=>{finishInit=resolve;});};
+ const bridge=new PokiBridge(true);bridge.loadingFinished();bridge.setPlaying(true);
+ await bridge.initialize(async()=>sdk,5);
+ assert.equal(bridge.status,'waiting');
+ bridge.measure('tutorial','onboarding','start');finishInit();await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(bridge.status,'ready');assert.deepEqual(calls,[['init'],['enableEventTracking'],['gameLoadingFinished'],['gameplayStart'],['measure','tutorial','onboarding','start']]);
+});
+test('transient SDK loading and gameplay call failures can retry without false reported state',async()=>{
+ const {sdk,calls}=fakeSDK();let failedLoad=false,failedStart=false;
+ sdk.gameLoadingFinished=()=>{if(!failedLoad){failedLoad=true;throw Error('Inspector not ready');}calls.push(['gameLoadingFinished']);};
+ sdk.gameplayStart=()=>{if(!failedStart){failedStart=true;throw Error('Inspector not ready');}calls.push(['gameplayStart']);};
+ const bridge=new PokiBridge(true);await bridge.initialize(async()=>sdk);bridge.loadingFinished();
+ bridge.setPlaying(true);bridge.setPlaying(true);bridge.setPlaying(true);bridge.setPlaying(false);
+ assert.deepEqual(calls,[['init'],['enableEventTracking'],['gameLoadingFinished'],['gameplayStart'],['gameplayStop']]);
+});
+
+test('late SDK readiness retains the latest paused state and reports loading just once',async()=>{
+ const {sdk,calls}=fakeSDK();let finishInit;sdk.init=()=>new Promise(resolve=>{finishInit=resolve;});
+ const bridge=new PokiBridge(true);bridge.loadingFinished();bridge.setPlaying(true);await bridge.initialize(async()=>sdk,5);
+ bridge.setPlaying(false);finishInit();await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(calls,[['enableEventTracking'],['gameLoadingFinished']]);
+ bridge.loadingFinished();bridge.setPlaying(true);bridge.setPlaying(true);bridge.setPlaying(false);
+ assert.deepEqual(calls.slice(-2),[['gameplayStart'],['gameplayStop']]);assert.equal(calls.filter(c=>c[0]==='gameLoadingFinished').length,1);
 });

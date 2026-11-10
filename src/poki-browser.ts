@@ -17,5 +17,5 @@ const loadSDK:PokiLoader=signal=>new Promise((resolve,reject)=>{
 });
 export function initializePoki(){
  // Loading runs alongside Phaser/assets; the game remains usable if the CDN or init is blocked.
- void poki.initialize(loadSDK).then(()=>{if(poki.status==='unavailable')console.warn('Poki SDK unavailable; continuing without Poki tracking.');else if(poki.status==='degraded')console.warn('Poki initialization failed; continuing with available SDK methods.');});
+ void poki.initialize(loadSDK).then(()=>{if(poki.status==='waiting')console.warn('Poki SDK is still connecting; gameplay continues and events will report when ready.');else if(poki.status==='unavailable')console.warn('Poki SDK unavailable; continuing without Poki tracking.');else if(poki.status==='degraded')console.warn('Poki initialization failed; continuing with available SDK methods.');});
 }

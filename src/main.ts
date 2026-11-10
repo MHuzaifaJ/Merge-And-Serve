@@ -52,7 +52,8 @@ class Shop extends Phaser.Scene{
   this.paint();this.save();document.getElementById('loading')?.remove();this.tracking.resumed(this.k);poki.loadingFinished();
  }
 
- beginGameplay(){this.hasPlayed=true;this.syncGameplay();}
+ // A real game action proves iframe interaction even when mobile focus events are missing.
+ beginGameplay(){this.focused=true;this.hasPlayed=true;this.syncGameplay();}
  syncGameplay(){poki.setPlaying(this.hasPlayed&&!this.panel&&!document.hidden&&this.focused);}
  suspendAudio(){if(this.audio)void this.audio.suspend().catch(()=>{});}
  resumeAudio(){if(this.audio&&this.soundOn&&this.focused&&!document.hidden)void this.audio.resume().catch(()=>{});}
@@ -127,7 +128,7 @@ class Shop extends Phaser.Scene{
  decorationPanel(){const k=this.k;
   this.surface({x:0,y:0,w:480,h:860},'card').setTint(0x224e42).setAlpha(.72);const shield=this.add.zone(0,0,480,860).setOrigin(0).setInteractive();this.ui.add(shield);
   this.surface({x:15,y:105,w:450,h:670},'wood');this.text(240,143,'DECORATIONS',26).setOrigin(.5);
-  this.icon(423,140,'close',43);this.hit({x:400,y:117,w:46,h:46},()=>{this.panel=false;this.syncGameplay();this.paint();});
+  this.icon(423,140,'close',43);this.hit({x:400,y:117,w:46,h:46},()=>{this.panel=false;this.focused=true;this.syncGameplay();this.paint();});
   const tabs=[['wall','Walls'],['counter','Counters'],['nameplate','Nameplates']] as const;
   tabs.forEach(([category,label],i)=>this.button({x:32+i*136,y:184,w:128,h:45},label,()=>{this.decorTab=category;this.message='';this.paint();},this.decorTab===category,15));
   DECORATIONS.filter(d=>d.category===this.decorTab).forEach((d,i)=>{const y=235+i*104,owned=k.owned.includes(d.id),equipped=k.equipped[d.category]===d.id;
